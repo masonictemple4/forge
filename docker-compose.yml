@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: forge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: forge
+      POSTGRES_PASSWORD: forge_dev_password
+      POSTGRES_DB: forge
+    ports:
+      - "5432:5432"
+    volumes:
+      - forge_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U forge -d forge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  forge_postgres_data:
+    driver: local
