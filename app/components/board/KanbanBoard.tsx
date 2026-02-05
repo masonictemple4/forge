@@ -8,11 +8,9 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  MeasuringStrategy,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
-  type DropAnimation,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -20,11 +18,15 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 import { between, after, before } from "@forge/lexorank";
 
-import { KanbanColumn, SimpleKanbanColumn } from "./KanbanColumn";
+import { 
+  KanbanColumn, 
+  SimpleKanbanColumn, 
+  SortableKanbanColumn, 
+  SortableVirtualizedKanbanColumn 
+} from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import type { Column, Task, DragData } from "./types";
 
@@ -37,8 +39,12 @@ interface KanbanBoardProps {
     targetColumnId: string,
     newRank: string
   ) => void;
-  onAddTask?: (columnId: string) => void;
-  onTaskClick?: (task: Task) => void;
+  onColumnReorder?: (
+    columnId: string,
+    beforeId: string | null,
+    afterId: string | null
+  ) => void;
+  onColumnRename?: (columnId: string, newTitle: string) => void;
 }
 
 const COLUMN_WIDTH = 288 + 8; // 288px column + 8px gap
@@ -48,8 +54,8 @@ export function KanbanBoard({
   columns: initialColumns,
   onColumnsChange,
   onTaskMove,
-  onAddTask,
-  onTaskClick,
+  onColumnReorder,
+  onColumnRename,
 }: KanbanBoardProps) {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -57,6 +63,11 @@ export function KanbanBoard({
   const [overId, setOverId] = useState<string | null>(null);
 
   const parentRef = useRef<HTMLDivElement>(null);
+
+  // Update columns when props change
+  useMemo(() => {
+    setColumns(initialColumns);
+  }, [initialColumns]);
 
   // Sensors for drag detection
   const sensors = useSensors(
@@ -165,6 +176,39 @@ export function KanbanBoard({
       const activeData = active.data.current as DragData;
       const overId = over.id as string;
 
+      // Handle column drag
+      if (activeData?.type === "column" && activeData.column) {
+        const activeColumnId = active.id as string;
+        const overColumnId = overId;
+        
+        if (activeColumnId !== overColumnId && overColumnId.startsWith("column-")) {
+          const activeIndex = columns.findIndex(
+            (c) => `column-${c.id}` === activeColumnId
+          );
+          const overIndex = columns.findIndex(
+            (c) => `column-${c.id}` === overColumnId
+          );
+
+          if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+            const newColumns = arrayMove(columns, activeIndex, overIndex);
+            setColumns(newColumns);
+            onColumnsChange?.(newColumns);
+
+            // Calculate before/after IDs for API
+            const movedColumnId = columns[activeIndex].id;
+            const beforeId = overIndex < newColumns.length - 1 
+              ? newColumns[overIndex + 1].id 
+              : null;
+            const afterId = overIndex > 0 
+              ? newColumns[overIndex - 1].id 
+              : null;
+
+            onColumnReorder?.(movedColumnId, beforeId, afterId);
+          }
+        }
+        return;
+      }
+
       // Handle task drag
       if (activeData?.type === "task" && activeData.task) {
         const task = activeData.task;
@@ -237,7 +281,20 @@ export function KanbanBoard({
         }
       }
     },
-    [findColumn, calculateNewRank, onTaskMove]
+    [columns, findColumn, calculateNewRank, onTaskMove, onColumnsChange, onColumnReorder]
+  );
+
+  // Handle column rename
+  const handleColumnRename = useCallback(
+    (columnId: string, newTitle: string) => {
+      setColumns((prev) =>
+        prev.map((col) =>
+          col.id === columnId ? { ...col, title: newTitle } : col
+        )
+      );
+      onColumnRename?.(columnId, newTitle);
+    },
+    [onColumnRename]
   );
 
   return (
@@ -289,20 +346,18 @@ export function KanbanBoard({
                   className="pr-2"
                 >
                   {useVirtualization ? (
-                    <KanbanColumn
+                    <SortableVirtualizedKanbanColumn
                       column={column}
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
-                      onAddTask={onAddTask}
-                      onTaskClick={onTaskClick}
+                      onRename={onColumnRename ? handleColumnRename : undefined}
                     />
                   ) : (
-                    <SimpleKanbanColumn
+                    <SortableKanbanColumn
                       column={column}
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
-                      onAddTask={onAddTask}
-                      onTaskClick={onTaskClick}
+                      onRename={onColumnRename ? handleColumnRename : undefined}
                     />
                   )}
                 </div>
@@ -317,6 +372,25 @@ export function KanbanBoard({
         createPortal(
           <DragOverlay>
             {activeTask && <TaskCard task={activeTask} isOverlay />}
+            {activeColumn && (
+              <div className="w-72 bg-muted/80 rounded-lg border shadow-xl opacity-90">
+                <div className="flex items-center gap-2 p-3 border-b bg-card rounded-t-lg">
+                  {activeColumn.color && (
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: activeColumn.color }}
+                    />
+                  )}
+                  <h3 className="font-semibold text-sm">{activeColumn.title}</h3>
+                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                    {activeColumn.tasks.length}
+                  </span>
+                </div>
+                <div className="p-3 text-sm text-muted-foreground">
+                  {activeColumn.tasks.length} tasks
+                </div>
+              </div>
+            )}
           </DragOverlay>,
           document.body
         )}

@@ -8,6 +8,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "~/lib/utils";
+import { Button } from "~/components/ui/button";
 import { DraggableTaskCard, TaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
@@ -17,6 +18,8 @@ interface KanbanColumnProps {
   isOver?: boolean;
   isDraggingOver?: boolean;
   onRename?: (columnId: string, newTitle: string) => void;
+  onAddTask?: (columnId: string) => void;
+  onTaskClick?: (task: Task) => void;
   isDragging?: boolean;
 }
 
@@ -30,11 +33,13 @@ function ColumnHeader({
   column,
   taskCount,
   onRename,
+  onAddTask,
   dragHandleProps,
 }: {
   column: Column;
   taskCount: number;
   onRename?: (columnId: string, newTitle: string) => void;
+  onAddTask?: (columnId: string) => void;
   dragHandleProps?: Record<string, any>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -75,7 +80,7 @@ function ColumnHeader({
   return (
     <div 
       className="flex items-center justify-between p-3 border-b bg-card rounded-t-lg"
-      {...dragHandleProps}
+      {...(dragHandleProps && !isEditing ? dragHandleProps : {})}
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         {column.color && (
@@ -110,24 +115,40 @@ function ColumnHeader({
           {taskCount}
         </span>
       </div>
-      {column.limit && taskCount > column.limit && (
-        <span className="text-xs text-destructive font-medium shrink-0 ml-2">
-          Over limit!
-        </span>
-      )}
-      {/* Drag handle indicator */}
-      {dragHandleProps && (
-        <div className="ml-2 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <circle cx="5" cy="4" r="1.5" />
-            <circle cx="11" cy="4" r="1.5" />
-            <circle cx="5" cy="8" r="1.5" />
-            <circle cx="11" cy="8" r="1.5" />
-            <circle cx="5" cy="12" r="1.5" />
-            <circle cx="11" cy="12" r="1.5" />
-          </svg>
-        </div>
-      )}
+      <div className="flex items-center gap-1">
+        {column.limit && taskCount > column.limit && (
+          <span className="text-xs text-destructive font-medium shrink-0">
+            Over limit!
+          </span>
+        )}
+        {onAddTask && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0 hover:bg-primary/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddTask(column.id);
+            }}
+            title="Add task"
+          >
+            <span className="text-lg leading-none">+</span>
+          </Button>
+        )}
+        {/* Drag handle indicator */}
+        {dragHandleProps && (
+          <div className="ml-1 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+              <circle cx="5" cy="4" r="1.5" />
+              <circle cx="11" cy="4" r="1.5" />
+              <circle cx="5" cy="8" r="1.5" />
+              <circle cx="11" cy="8" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+              <circle cx="11" cy="12" r="1.5" />
+            </svg>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -214,6 +235,8 @@ export function KanbanColumn({
   isOver,
   isDraggingOver,
   onRename,
+  onAddTask,
+  onTaskClick,
   isDragging,
   dragHandleProps,
 }: KanbanColumnInternalProps) {
@@ -256,6 +279,7 @@ export function KanbanColumn({
         column={column}
         taskCount={tasks.length}
         onRename={onRename}
+        onAddTask={onAddTask}
         dragHandleProps={dragHandleProps}
       />
 
@@ -296,7 +320,7 @@ export function KanbanColumn({
                   }}
                   className="pb-2"
                 >
-                  <DraggableTaskCard task={task} />
+                  <DraggableTaskCard task={task} onClick={onTaskClick} />
                 </div>
               );
             })}
@@ -323,6 +347,8 @@ export function SimpleKanbanColumn({
   tasks,
   isOver,
   onRename,
+  onAddTask,
+  onTaskClick,
   isDragging,
   dragHandleProps,
 }: KanbanColumnInternalProps) {
@@ -350,13 +376,14 @@ export function SimpleKanbanColumn({
         column={column}
         taskCount={tasks.length}
         onRename={onRename}
+        onAddTask={onAddTask}
         dragHandleProps={dragHandleProps}
       />
 
       <div ref={setNodeRef} className="flex-1 overflow-auto p-2 space-y-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
-            <DraggableTaskCard key={task.id} task={task} />
+            <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
           ))}
         </SortableContext>
 

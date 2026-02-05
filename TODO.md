@@ -5,16 +5,16 @@
 - [ ] Add new tasks (UI + API)
 - [ ] Edit tasks (inline or modal)
 - [ ] Delete tasks (with confirmation)
-- [ ] Reorder columns (drag & drop)
-- [ ] Rename columns (inline edit)
+- [x] Reorder columns (drag & drop) - dnd-kit sortable columns with lexorank
+- [x] Rename columns (inline edit) - double-click header to rename, optimistic update
 - [x] Fix cross-column drag animation (match in-column animation)
 - [x] Landing page (marketing/hero) - Hero, features, CTAs, responsive design
-- [x] Login page - GitHub, Google, Apple OAuth buttons (UI only)
+- [x] Login page - GitHub, Google, Apple OAuth buttons + email/password form
 - [ ] Auth: GitHub OAuth (self-implemented)
 - [ ] Auth: Google OAuth (self-implemented)
 - [ ] Auth: Apple OAuth (self-implemented)
-- [ ] User sessions & JWT handling
-- [ ] Email/password auth with registration
+- [x] User sessions & JWT handling
+- [x] Email/password auth with registration
 
 ## ✅ Completed
 - [x] Migrate from @tanstack/start to @tanstack/react-start (deprecation warning fixed)

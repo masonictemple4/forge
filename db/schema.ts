@@ -7,6 +7,7 @@ import {
   primaryKey,
   index,
   customType,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
 
@@ -28,9 +29,9 @@ export type TaskStatus = (typeof taskStatuses)[number];
 /**
  * Users Table
  * 
- * OAuth-authenticated users with:
- * - Provider-specific ID for linking accounts
- * - Profile information from OAuth provider
+ * Supports both OAuth and email/password authentication:
+ * - OAuth users: provider + providerId fields set, passwordHash null
+ * - Email/password users: provider = 'email', passwordHash set
  */
 export const users = pgTable(
   "users",
@@ -42,18 +43,25 @@ export const users = pgTable(
     name: varchar("name", { length: 255 }),
     avatarUrl: text("avatar_url"),
     
-    // OAuth provider info
-    provider: varchar("provider", { length: 20 }).notNull(), // github, google, apple
-    providerId: varchar("provider_id", { length: 255 }).notNull(), // ID from provider
+    // Auth provider info
+    provider: varchar("provider", { length: 20 }).notNull(), // github, google, apple, email
+    providerId: varchar("provider_id", { length: 255 }), // ID from OAuth provider (null for email auth)
+    
+    // Email/password auth fields
+    passwordHash: text("password_hash"), // Argon2 hash (null for OAuth users)
+    emailVerified: boolean("email_verified").notNull().default(false),
+    verificationToken: varchar("verification_token", { length: 255 }), // For email verification
     
     // Timestamps
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    // Unique constraint: one account per provider+providerId combo
+    // Unique constraint: one account per provider+providerId combo (for OAuth)
     index("users_provider_provider_id_idx").on(table.provider, table.providerId),
-    // Index for email lookups
+    // Index for email lookups (unique for email provider)
     index("users_email_idx").on(table.email),
+    // Index for verification token lookups
+    index("users_verification_token_idx").on(table.verificationToken),
   ]
 );
 

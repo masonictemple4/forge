@@ -1,6 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Header, ForgeLogo } from "~/components/layout";
 
 export const Route = createFileRoute("/login")({
@@ -8,6 +11,41 @@ export const Route = createFileRoute("/login")({
 });
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function handleEmailLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || "Login failed");
+        return;
+      }
+
+      // Redirect to dashboard on success
+      navigate({ to: "/board/api" });
+    } catch (err) {
+      setError("An error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground font-sans">
       <Header showLoginButton={false} />
@@ -30,39 +68,49 @@ function LoginPage() {
             <CardHeader className="space-y-1 text-center">
               <CardTitle className="text-2xl">Sign in</CardTitle>
               <CardDescription>
-                Choose your preferred sign-in method
+                Enter your email and password to sign in
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* GitHub */}
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base gap-3"
-                onClick={() => handleOAuth("github")}
-              >
-                <GitHubIcon className="h-5 w-5" />
-                Continue with GitHub
-              </Button>
+              {/* Email/Password Form */}
+              <form onSubmit={handleEmailLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
 
-              {/* Google */}
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base gap-3"
-                onClick={() => handleOAuth("google")}
-              >
-                <GoogleIcon className="h-5 w-5" />
-                Continue with Google
-              </Button>
+                {error && (
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                )}
 
-              {/* Apple */}
-              <Button
-                variant="outline"
-                className="w-full h-12 text-base gap-3"
-                onClick={() => handleOAuth("apple")}
-              >
-                <AppleIcon className="h-5 w-5" />
-                Continue with Apple
-              </Button>
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-base"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Signing in..." : "Sign in"}
+                </Button>
+              </form>
 
               {/* Divider */}
               <div className="relative my-6">
@@ -71,13 +119,60 @@ function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-card px-2 text-muted-foreground">
-                    Secure authentication
+                    Or continue with
                   </span>
                 </div>
               </div>
 
+              {/* OAuth Buttons */}
+              <div className="space-y-3">
+                {/* GitHub */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base gap-3"
+                  onClick={() => handleOAuth("github")}
+                  type="button"
+                >
+                  <GitHubIcon className="h-5 w-5" />
+                  Continue with GitHub
+                </Button>
+
+                {/* Google */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base gap-3"
+                  onClick={() => handleOAuth("google")}
+                  type="button"
+                >
+                  <GoogleIcon className="h-5 w-5" />
+                  Continue with Google
+                </Button>
+
+                {/* Apple */}
+                <Button
+                  variant="outline"
+                  className="w-full h-12 text-base gap-3"
+                  onClick={() => handleOAuth("apple")}
+                  type="button"
+                >
+                  <AppleIcon className="h-5 w-5" />
+                  Continue with Apple
+                </Button>
+              </div>
+
+              {/* Register link */}
+              <p className="text-center text-sm text-muted-foreground pt-4">
+                Don't have an account?{" "}
+                <Link
+                  to="/register"
+                  className="text-primary hover:underline underline-offset-4 font-medium"
+                >
+                  Create one
+                </Link>
+              </p>
+
               {/* Info text */}
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-xs text-muted-foreground">
                 By continuing, you agree to our{" "}
                 <a href="#" className="underline underline-offset-4 hover:text-primary">
                   Terms of Service
@@ -105,10 +200,10 @@ function LoginPage() {
   );
 }
 
-// Placeholder OAuth handler - will be replaced with actual auth logic
+// OAuth handler - redirects to auth endpoint
 function handleOAuth(provider: "github" | "google" | "apple") {
-  console.log(`OAuth with ${provider} - not implemented yet`);
-  // Future: redirect to /api/auth/${provider}
+  // Redirect to the OAuth initiation endpoint
+  window.location.href = `/auth/${provider}`;
 }
 
 // Icon components

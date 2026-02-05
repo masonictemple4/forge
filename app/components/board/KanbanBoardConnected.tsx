@@ -5,6 +5,7 @@
  * - Data fetching via TanStack Query
  * - Optimistic updates for instant responsiveness
  * - Error handling with toast notifications
+ * - Column reordering and renaming
  * - Automatic cache management
  */
 
@@ -16,6 +17,8 @@ import {
   useMoveTask,
   useCreateTask,
   useDeleteTask,
+  useUpdateColumn,
+  useReorderColumn,
   type Task as ApiTask,
   type TaskStatus,
 } from "~/lib/query";
@@ -50,11 +53,11 @@ function apiTaskToBoardTask(task: ApiTask): Task {
 function transformColumns(
   apiColumns: { id: TaskStatus; title: string; color: string; tasks: ApiTask[] }[]
 ): Column[] {
-  return apiColumns.map((col) => ({
+  return apiColumns.map((col, index) => ({
     id: col.id,
     title: col.title,
     color: col.color,
-    rank: col.id, // Use status as rank for columns
+    rank: String(index), // Use index as rank for status-based columns
     tasks: col.tasks.map(apiTaskToBoardTask),
   }));
 }
@@ -62,6 +65,8 @@ function transformColumns(
 export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnectedProps) {
   const { data: board, isLoading, error } = useBoard(boardId);
   const moveTaskMutation = useMoveTask();
+  const updateColumnMutation = useUpdateColumn();
+  const reorderColumnMutation = useReorderColumn();
   const toast = useToast();
 
   // Transform data for board component
@@ -122,11 +127,54 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
     [columns, moveTaskMutation, toast]
   );
 
-  // Handle column reorder (not persisted to backend yet)
+  // Handle column reorder
+  const handleColumnReorder = useCallback(
+    (columnId: string, beforeId: string | null, afterId: string | null) => {
+      reorderColumnMutation.mutate(
+        {
+          columnId,
+          beforeId,
+          afterId,
+        },
+        {
+          onError: (err) => {
+            toast.error(
+              "Failed to reorder column",
+              err instanceof Error ? err.message : "Please try again"
+            );
+          },
+        }
+      );
+    },
+    [reorderColumnMutation, toast]
+  );
+
+  // Handle column rename with optimistic update
+  const handleColumnRename = useCallback(
+    (columnId: string, newTitle: string) => {
+      updateColumnMutation.mutate(
+        {
+          id: columnId,
+          title: newTitle,
+        },
+        {
+          onError: (err) => {
+            toast.error(
+              "Failed to rename column",
+              err instanceof Error ? err.message : "Please try again"
+            );
+          },
+        }
+      );
+    },
+    [updateColumnMutation, toast]
+  );
+
+  // Handle column changes (for local state sync)
   const handleColumnsChange = useCallback((newColumns: Column[]) => {
-    // For now, columns are static (based on task status)
-    // Could implement custom column ordering in the future
-    console.log("Columns reordered:", newColumns);
+    // Local state is managed by KanbanBoard
+    // API sync is handled by individual handlers
+    console.log("Columns changed:", newColumns.map(c => c.title).join(", "));
   }, []);
 
   // Loading state
@@ -160,6 +208,8 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
       columns={columns}
       onColumnsChange={handleColumnsChange}
       onTaskMove={handleTaskMove}
+      onColumnReorder={handleColumnReorder}
+      onColumnRename={handleColumnRename}
     />
   );
 }
