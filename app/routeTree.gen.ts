@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as BoardImport } from './routes/board'
 import { Route as IndexImport } from './routes/index'
+import { Route as BoardStressImport } from './routes/board.stress'
 
 // Create/Update Routes
 
@@ -26,6 +27,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const BoardStressRoute = BoardStressImport.update({
+  id: '/stress',
+  path: '/stress',
+  getParentRoute: () => BoardRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -46,44 +53,64 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoardImport
       parentRoute: typeof rootRoute
     }
+    '/board/stress': {
+      id: '/board/stress'
+      path: '/stress'
+      fullPath: '/board/stress'
+      preLoaderRoute: typeof BoardStressImport
+      parentRoute: typeof BoardImport
+    }
   }
 }
 
 // Create and export the route tree
 
+interface BoardRouteChildren {
+  BoardStressRoute: typeof BoardStressRoute
+}
+
+const BoardRouteChildren: BoardRouteChildren = {
+  BoardStressRoute: BoardStressRoute,
+}
+
+const BoardRouteWithChildren = BoardRoute._addFileChildren(BoardRouteChildren)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
+  '/board': typeof BoardRouteWithChildren
+  '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
+  '/board': typeof BoardRouteWithChildren
+  '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/board': typeof BoardRoute
+  '/board': typeof BoardRouteWithChildren
+  '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/board'
+  fullPaths: '/' | '/board' | '/board/stress'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/board'
-  id: '__root__' | '/' | '/board'
+  to: '/' | '/board' | '/board/stress'
+  id: '__root__' | '/' | '/board' | '/board/stress'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BoardRoute: typeof BoardRoute
+  BoardRoute: typeof BoardRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BoardRoute: BoardRoute,
+  BoardRoute: BoardRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -104,7 +131,14 @@ export const routeTree = rootRoute
       "filePath": "index.tsx"
     },
     "/board": {
-      "filePath": "board.tsx"
+      "filePath": "board.tsx",
+      "children": [
+        "/board/stress"
+      ]
+    },
+    "/board/stress": {
+      "filePath": "board.stress.tsx",
+      "parent": "/board"
     }
   }
 }
