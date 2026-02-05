@@ -1,0 +1,27 @@
+{
+  "name": "@forge/lexorank",
+  "version": "1.0.0",
+  "description": "LexoRank implementation for O(1) list reordering",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "lexorank",
+    "fractional-indexing",
+    "sorting",
+    "ordering"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.0"
+  }
+}
