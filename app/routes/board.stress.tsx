@@ -12,7 +12,6 @@ function StressTestPage() {
   const initialColumns = useMemo(() => generateMockData(20, 200), []);
 
   const [renderCount, setRenderCount] = useState(0);
-  const [taskMoves, setTaskMoves] = useState<string[]>([]);
 
   const handleTaskMove = (
     taskId: number,
@@ -21,8 +20,7 @@ function StressTestPage() {
     newRank: string
   ) => {
     setRenderCount((c) => c + 1);
-    const moveLog = `[${new Date().toLocaleTimeString()}] Task ${taskId}: ${sourceColumnId} → ${targetColumnId}`;
-    setTaskMoves((prev) => [moveLog, ...prev.slice(0, 4)]);
+    console.log(`[${new Date().toLocaleTimeString()}] Task ${taskId}: ${sourceColumnId} → ${targetColumnId} (rank: ${newRank})`);
   };
 
   const totalTasks = initialColumns.reduce(
@@ -80,25 +78,6 @@ function StressTestPage() {
       <main className="flex-1 min-h-0 overflow-hidden">
         <KanbanBoard columns={initialColumns} onTaskMove={handleTaskMove} />
       </main>
-
-      {/* Activity Log */}
-      {taskMoves.length > 0 && (
-        <div className="border-t bg-muted/30 px-6 py-3 shrink-0">
-          <h3 className="text-xs font-semibold text-muted-foreground mb-2">
-            Recent Moves
-          </h3>
-          <div className="flex gap-2 overflow-x-auto">
-            {taskMoves.map((move, i) => (
-              <span
-                key={i}
-                className="text-xs bg-background px-2 py-1 rounded border whitespace-nowrap font-mono"
-              >
-                {move}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

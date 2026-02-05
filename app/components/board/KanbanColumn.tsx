@@ -12,8 +12,9 @@ import { Button } from "~/components/ui/button";
 import { DraggableTaskCard, TaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
-// Card height estimate for virtualizer (doesn't need to be exact)
-const CARD_HEIGHT_ESTIMATE = 80;
+// Card height estimate for virtualizer: card ~80px + 8px gap = 88px
+const CARD_HEIGHT_ESTIMATE = 88;
+const CARD_GAP = 8;
 
 interface KanbanColumnProps {
   column: Column;
