@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useLayoutEffect, forwardRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -9,11 +9,87 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
-import { DraggableTaskCard } from "./TaskCard";
+import { TaskCard, DraggableTaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
 // Card height estimate for virtualizer (fixed, no dynamic measurement)
-const CARD_HEIGHT_ESTIMATE = 108; // ~100px card + 8px margin
+// Must be large enough to accommodate the largest card + gap
+// Cards can be 60-130px depending on content, so use 140px to be safe
+const CARD_HEIGHT = 130; // Max card content height
+const CARD_GAP = 10; // Gap between cards (pb-2.5 = 10px)
+const CARD_HEIGHT_ESTIMATE = CARD_HEIGHT + CARD_GAP; // 140px total
+const GAP = 8; // Gap between cards
+
+/**
+ * Virtualized sortable item that combines TanStack Virtual positioning with dnd-kit
+ * The key: virtualizer controls base Y position, dnd-kit transform is added on top
+ */
+interface VirtualizedSortableItemProps {
+  task: Task;
+  virtualStart: number;
+  onClick?: (task: Task) => void;
+}
+
+function VirtualizedSortableItem({ task, virtualStart, onClick }: VirtualizedSortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isSorting,
+  } = useSortable({
+    id: `task-${task.id}`,
+    data: {
+      type: "task",
+      task,
+    },
+    animateLayoutChanges: () => true,
+  });
+
+  // Combine virtualizer's Y position with dnd-kit's transform
+  // During drag: dnd-kit controls position entirely
+  // Not dragging: virtualizer Y + any dnd-kit sorting offset
+  const yOffset = virtualStart + (transform?.y ?? 0);
+  const xOffset = transform?.x ?? 0;
+  const scaleX = transform?.scaleX ?? 1;
+  const scaleY = transform?.scaleY ?? 1;
+
+  const combinedTransform = `translate3d(${xOffset}px, ${yOffset}px, 0) scaleX(${scaleX}) scaleY(${scaleY})`;
+
+  const customTransition = isSorting || transition
+    ? `transform 200ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+    : undefined;
+
+  const style: React.CSSProperties = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    transform: combinedTransform,
+    transition: customTransition,
+    opacity: isDragging ? 0 : 1,
+    zIndex: isDragging ? 1 : 0,
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (isDragging) return;
+    onClick?.(task);
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={handleClick}
+    >
+      <TaskCard task={task} isDragging={isDragging} />
+    </div>
+  );
+}
 
 interface KanbanColumnProps {
   column: Column;
@@ -294,34 +370,43 @@ export function KanbanColumn({
         className="overflow-y-auto p-2"
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          <div
-            style={{
-              height: `${virtualizer.getTotalSize()}px`,
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {virtualItems.map((virtualItem) => {
-              const task = tasks[virtualItem.index];
-              if (!task) return null;
-
-              return (
-                <div
-                  key={virtualItem.key}
-                  data-index={virtualItem.index}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualItem.start}px)`,
-                  }}
-                >
-                  <DraggableTaskCard task={task} onClick={onTaskClick} />
+          {/* SSR/hydration: render first few items normally, then switch to virtualized after mount */}
+          {!isMounted ? (
+            // During SSR: render first ~5 items for initial paint
+            <div className="space-y-2">
+              {tasks.slice(0, 5).map((task) => (
+                <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
+              ))}
+              {tasks.length > 5 && (
+                <div className="text-xs text-muted-foreground text-center py-2">
+                  Loading {tasks.length - 5} more...
                 </div>
-              );
-            })}
-          </div>
+              )}
+            </div>
+          ) : (
+            // After mount: use virtualization with combined transforms
+            <div
+              style={{
+                height: `${virtualizer.getTotalSize()}px`,
+                width: "100%",
+                position: "relative",
+              }}
+            >
+              {virtualItems.map((virtualItem) => {
+                const task = tasks[virtualItem.index];
+                if (!task) return null;
+
+                return (
+                  <VirtualizedSortableItem
+                    key={task.id}
+                    task={task}
+                    virtualStart={virtualItem.start}
+                    onClick={onTaskClick}
+                  />
+                );
+              })}
+            </div>
+          )}
         </SortableContext>
 
         {/* Empty state */}

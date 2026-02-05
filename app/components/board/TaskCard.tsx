@@ -140,7 +140,7 @@ export function DraggableTaskCard({ task, onClick }: DraggableTaskCardProps) {
     <div
       ref={setNodeRef}
       style={style}
-      className="mb-2"
+      className="h-full"
       {...attributes}
       {...listeners}
       onClick={handleClick}

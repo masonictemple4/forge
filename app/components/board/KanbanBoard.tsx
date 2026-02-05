@@ -20,7 +20,7 @@ import {
 import { createPortal } from "react-dom";
 import { between, after, before } from "@forge/lexorank";
 
-import { SortableKanbanColumn } from "./KanbanColumn";
+import { SortableVirtualizedKanbanColumn } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import type { Column, Task, DragData } from "./types";
 
@@ -296,7 +296,7 @@ export function KanbanBoard({
           strategy={horizontalListSortingStrategy}
         >
           {columns.map((column) => (
-            <SortableKanbanColumn
+            <SortableVirtualizedKanbanColumn
               key={column.id}
               column={column}
               tasks={column.tasks}
