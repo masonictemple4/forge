@@ -229,6 +229,8 @@ interface KanbanColumnInternalProps extends KanbanColumnProps {
   dragHandleProps?: Record<string, any>;
 }
 
+const HEADER_HEIGHT = 49; // Height of column header (p-3 + border-b)
+
 export function KanbanColumn({
   column,
   tasks,
@@ -241,6 +243,30 @@ export function KanbanColumn({
   dragHandleProps,
 }: KanbanColumnInternalProps) {
   const parentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(400); // Default fallback
+
+  // Measure container height for virtualizer
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const updateHeight = () => {
+      const rect = container.getBoundingClientRect();
+      if (rect.height > 0) {
+        setContainerHeight(rect.height - HEADER_HEIGHT);
+      }
+    };
+
+    // Initial measurement
+    updateHeight();
+
+    // Re-measure on resize
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(container);
+
+    return () => resizeObserver.disconnect();
+  }, []);
 
   // Set up droppable zone for the column
   const { setNodeRef, isOver: isDropOver } = useDroppable({
@@ -268,6 +294,7 @@ export function KanbanColumn({
 
   return (
     <div
+      ref={containerRef}
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
         isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
@@ -289,10 +316,9 @@ export function KanbanColumn({
           setNodeRef(node);
           (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
-        className="flex-1 min-h-0 overflow-auto p-2"
+        className="overflow-auto p-2"
         style={{
-          // Ensure scrolling works properly
-          contain: "strict",
+          height: `${containerHeight}px`,
         }}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
