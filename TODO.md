@@ -1,8 +1,8 @@
 # Forge - Project TODO
 
 ## 🚨 Blockers (Must Fix Before Use)
-- [ ] Fix TanStack Start version compatibility issue (SSR exports)
-- [ ] Verify dev server runs cleanly (`pnpm dev`)
+- [x] Fix TanStack Start version compatibility issue (SSR exports) - Pinned to 1.120.17
+- [x] Verify dev server runs cleanly (`pnpm dev`)
 
 ## 🔧 Setup & Configuration
 - [x] Create `.env.example` with all required variables

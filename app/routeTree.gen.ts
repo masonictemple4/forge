@@ -14,6 +14,7 @@ import { Route as rootRoute } from './routes/__root'
 import { Route as BoardImport } from './routes/board'
 import { Route as IndexImport } from './routes/index'
 import { Route as BoardStressImport } from './routes/board.stress'
+import { Route as BoardApiImport } from './routes/board.api'
 
 // Create/Update Routes
 
@@ -35,6 +36,12 @@ const BoardStressRoute = BoardStressImport.update({
   getParentRoute: () => BoardRoute,
 } as any)
 
+const BoardApiRoute = BoardApiImport.update({
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => BoardRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
@@ -53,6 +60,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BoardImport
       parentRoute: typeof rootRoute
     }
+    '/board/api': {
+      id: '/board/api'
+      path: '/api'
+      fullPath: '/board/api'
+      preLoaderRoute: typeof BoardApiImport
+      parentRoute: typeof BoardImport
+    }
     '/board/stress': {
       id: '/board/stress'
       path: '/stress'
@@ -66,10 +80,12 @@ declare module '@tanstack/react-router' {
 // Create and export the route tree
 
 interface BoardRouteChildren {
+  BoardApiRoute: typeof BoardApiRoute
   BoardStressRoute: typeof BoardStressRoute
 }
 
 const BoardRouteChildren: BoardRouteChildren = {
+  BoardApiRoute: BoardApiRoute,
   BoardStressRoute: BoardStressRoute,
 }
 
@@ -78,12 +94,14 @@ const BoardRouteWithChildren = BoardRoute._addFileChildren(BoardRouteChildren)
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
+  '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
+  '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
 
@@ -91,15 +109,16 @@ export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
+  '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/board' | '/board/stress'
+  fullPaths: '/' | '/board' | '/board/api' | '/board/stress'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/board' | '/board/stress'
-  id: '__root__' | '/' | '/board' | '/board/stress'
+  to: '/' | '/board' | '/board/api' | '/board/stress'
+  id: '__root__' | '/' | '/board' | '/board/api' | '/board/stress'
   fileRoutesById: FileRoutesById
 }
 
@@ -133,8 +152,13 @@ export const routeTree = rootRoute
     "/board": {
       "filePath": "board.tsx",
       "children": [
+        "/board/api",
         "/board/stress"
       ]
+    },
+    "/board/api": {
+      "filePath": "board.api.tsx",
+      "parent": "/board"
     },
     "/board/stress": {
       "filePath": "board.stress.tsx",
