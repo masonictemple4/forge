@@ -1,9 +1,10 @@
 import { defineConfig } from "@tanstack/start/config";
+import tailwindcss from "@tailwindcss/vite";
 import tsConfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   vite: {
-    plugins: [tsConfigPaths()],
+    plugins: [tsConfigPaths(), tailwindcss()],
   },
   server: {
     preset: "node-server",

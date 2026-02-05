@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  /* Color scheme based on Zinc for a clean, professional look */
+  --color-background: oklch(1 0 0);
+  --color-foreground: oklch(0.141 0.005 285.82);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.141 0.005 285.82);
+  --color-popover: oklch(1 0 0);
+  --color-popover-foreground: oklch(0.141 0.005 285.82);
+  --color-primary: oklch(0.141 0.005 285.82);
+  --color-primary-foreground: oklch(0.985 0 0);
+  --color-secondary: oklch(0.967 0.001 286.38);
+  --color-secondary-foreground: oklch(0.141 0.005 285.82);
+  --color-muted: oklch(0.967 0.001 286.38);
+  --color-muted-foreground: oklch(0.552 0.016 286);
+  --color-accent: oklch(0.967 0.001 286.38);
+  --color-accent-foreground: oklch(0.141 0.005 285.82);
+  --color-destructive: oklch(0.577 0.245 27.33);
+  --color-destructive-foreground: oklch(0.985 0 0);
+  --color-border: oklch(0.92 0.004 286.32);
+  --color-input: oklch(0.92 0.004 286.32);
+  --color-ring: oklch(0.141 0.005 285.82);
+
+  /* Task status colors */
+  --color-status-todo: oklch(0.7 0.15 250);
+  --color-status-todo-foreground: oklch(0.3 0.1 250);
+  --color-status-in-progress: oklch(0.75 0.18 85);
+  --color-status-in-progress-foreground: oklch(0.35 0.12 85);
+  --color-status-done: oklch(0.72 0.19 145);
+  --color-status-done-foreground: oklch(0.3 0.12 145);
+  --color-status-blocked: oklch(0.7 0.2 25);
+  --color-status-blocked-foreground: oklch(0.35 0.15 25);
+
+  /* Radius */
+  --radius-lg: 0.5rem;
+  --radius-md: calc(var(--radius-lg) - 2px);
+  --radius-sm: calc(var(--radius-lg) - 4px);
+
+  /* Sidebar (for future use) */
+  --color-sidebar-background: oklch(0.985 0 0);
+  --color-sidebar-foreground: oklch(0.395 0.03 256.8);
+  --color-sidebar-primary: oklch(0.21 0.006 285.88);
+  --color-sidebar-primary-foreground: oklch(0.985 0 0);
+  --color-sidebar-accent: oklch(0.967 0.001 286.38);
+  --color-sidebar-accent-foreground: oklch(0.21 0.006 285.88);
+  --color-sidebar-border: oklch(0.92 0.004 286.32);
+  --color-sidebar-ring: oklch(0.556 0.215 252.42);
+
+  /* Chart colors */
+  --color-chart-1: oklch(0.646 0.222 41.12);
+  --color-chart-2: oklch(0.6 0.118 184.71);
+  --color-chart-3: oklch(0.398 0.07 227.39);
+  --color-chart-4: oklch(0.828 0.189 84.43);
+  --color-chart-5: oklch(0.769 0.188 70.08);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+.dark {
+  --color-background: oklch(0.141 0.005 285.82);
+  --color-foreground: oklch(0.985 0 0);
+  --color-card: oklch(0.141 0.005 285.82);
+  --color-card-foreground: oklch(0.985 0 0);
+  --color-popover: oklch(0.141 0.005 285.82);
+  --color-popover-foreground: oklch(0.985 0 0);
+  --color-primary: oklch(0.985 0 0);
+  --color-primary-foreground: oklch(0.21 0.006 285.88);
+  --color-secondary: oklch(0.274 0.006 286.03);
+  --color-secondary-foreground: oklch(0.985 0 0);
+  --color-muted: oklch(0.274 0.006 286.03);
+  --color-muted-foreground: oklch(0.705 0.015 286.07);
+  --color-accent: oklch(0.274 0.006 286.03);
+  --color-accent-foreground: oklch(0.985 0 0);
+  --color-destructive: oklch(0.577 0.245 27.33);
+  --color-destructive-foreground: oklch(0.985 0 0);
+  --color-border: oklch(0.274 0.006 286.03);
+  --color-input: oklch(0.274 0.006 286.03);
+  --color-ring: oklch(0.871 0.006 286.29);
+
+  /* Dark mode task status colors */
+  --color-status-todo: oklch(0.55 0.15 250);
+  --color-status-todo-foreground: oklch(0.9 0.05 250);
+  --color-status-in-progress: oklch(0.6 0.18 85);
+  --color-status-in-progress-foreground: oklch(0.95 0.05 85);
+  --color-status-done: oklch(0.55 0.19 145);
+  --color-status-done-foreground: oklch(0.95 0.05 145);
+  --color-status-blocked: oklch(0.55 0.2 25);
+  --color-status-blocked-foreground: oklch(0.95 0.05 25);
+}
