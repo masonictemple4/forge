@@ -1,14 +1,16 @@
 /**
  * LexoRank - Fractional Indexing for O(1) list reordering
  * 
- * Uses base-62 characters (0-9, A-Z, a-z) for compact, sortable strings.
+ * Uses an extended character set for compact, sortable strings.
  * This allows inserting items between any two existing items without
  * renumbering the entire list.
  */
 
-// Base-62 character set for maximum density while remaining URL-safe
-const CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-const BASE = CHARS.length; // 62
+// Extended character set: includes characters before '0' for headroom
+// ASCII order: '-' (45) < '0' (48) < '9' (57) < 'A' (65) < 'Z' (90) < 'a' (97) < 'z' (122)
+// We use: - . / 0-9 A-Z _ a-z (sorted by ASCII)
+const CHARS = '-./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz';
+const BASE = CHARS.length; // 66
 
 // Precompute char to index map for O(1) lookups
 const CHAR_TO_INDEX = new Map<string, number>();
@@ -77,53 +79,55 @@ export function between(a: string, b: string): string {
     throw new Error(`Invalid range: a (${a}) must be less than b (${b})`);
   }
 
-  // Find the first position where they differ
+  return midpoint(a, b);
+}
+
+/**
+ * Find the lexicographic midpoint between two strings.
+ * Assumes a < b.
+ */
+function midpoint(a: string, b: string): string {
+  // Pad to same length for easier comparison
+  const maxLen = Math.max(a.length, b.length);
+  
+  // Find first differing position
   let pos = 0;
-  while (pos < a.length && pos < b.length && a[pos] === b[pos]) {
+  while (pos < maxLen) {
+    const aIdx = pos < a.length ? charIndex(a[pos]) : 0;
+    const bIdx = pos < b.length ? charIndex(b[pos]) : BASE - 1;
+    
+    if (aIdx !== bIdx) {
+      // Found difference
+      if (bIdx - aIdx > 1) {
+        // Room between - take midpoint
+        const midIdx = Math.floor((aIdx + bIdx) / 2);
+        return a.slice(0, pos) + indexChar(midIdx);
+      }
+      
+      // Adjacent characters - need to go deeper
+      // Take the lower char and find space in next position
+      const prefix = a.slice(0, pos) + indexChar(aIdx);
+      
+      // Get the suffix starting positions
+      const aSuffix = pos + 1 < a.length ? charIndex(a[pos + 1]) : 0;
+      const bSuffix = BASE - 1; // Since we're taking aIdx, we have full range above aSuffix
+      
+      if (bSuffix - aSuffix > 1) {
+        const midSuffix = Math.floor((aSuffix + bSuffix) / 2);
+        return prefix + indexChar(midSuffix);
+      }
+      
+      // Still adjacent, recurse deeper
+      const aRest = pos + 1 < a.length ? a.slice(pos + 1) : FIRST_CHAR;
+      const bRest = LAST_CHAR;
+      
+      return prefix + midpoint(aRest, bRest);
+    }
     pos++;
   }
-
-  // Get the characters at the differing position
-  const aChar = charAt(a, pos);
-  const bChar = charAt(b, pos);
-  const aIdx = charIndex(aChar);
-  const bIdx = charIndex(bChar);
-
-  // If there's room between the characters, use the midpoint
-  if (bIdx - aIdx > 1) {
-    const midIdx = Math.floor((aIdx + bIdx) / 2);
-    return a.slice(0, pos) + indexChar(midIdx);
-  }
-
-  // Characters are adjacent (e.g., 'a' and 'b')
-  // We need to go deeper into 'a' to find space
   
-  // Strategy: append midpoint character to 'a'
-  // But first, we need to find the longest common prefix that still leaves room
-  
-  // If a has more characters, we need to find a suffix position
-  if (pos < a.length) {
-    // Look for a position in 'a' where we can increment
-    let i = a.length - 1;
-    while (i > pos) {
-      const cIdx = charIndex(a[i]);
-      if (cIdx < BASE - 1) {
-        // We can increment here and potentially truncate
-        // But we need to ensure we're still < b
-        const candidate = a.slice(0, i) + indexChar(cIdx + 1);
-        if (candidate < b) {
-          return candidate;
-        }
-      }
-      i--;
-    }
-    // No room found, append midpoint
-    return a + MID_CHAR;
-  }
-
-  // a is shorter than or equal length to the common prefix
-  // Just append midpoint
-  return a.slice(0, pos + 1) + MID_CHAR;
+  // Strings are equal (shouldn't happen if a < b)
+  throw new Error(`Cannot find midpoint: strings are equal`);
 }
 
 /**
@@ -182,36 +186,44 @@ export function before(rank: string): string {
     return initial();
   }
 
-  // Strategy: try to decrement the last character
-  // If it would result in a '0' suffix, we can often truncate
+  // Strategy: find space to the left of rank
+  // We generate a string between FIRST_CHAR (minimum) and rank
   
-  const lastIdx = charIndex(rank[rank.length - 1]);
+  const firstIdx = charIndex(rank[0]);
   
-  if (lastIdx > 1) {
-    // Decrement the last character (leaving room above '0')
-    return rank.slice(0, -1) + indexChar(lastIdx - 1);
+  if (firstIdx > 1) {
+    // Room to decrement first character
+    return indexChar(firstIdx - 1);
   }
   
-  if (lastIdx === 1) {
-    // Would become '0', but we want to leave room
-    // Append midpoint to the decremented version
-    return rank.slice(0, -1) + FIRST_CHAR + MID_CHAR;
+  if (firstIdx === 1) {
+    // Would go to minimum char, add suffix for room
+    return FIRST_CHAR + MID_CHAR;
   }
   
-  // Last char is '0', find rightmost non-'0' character
-  let i = rank.length - 1;
-  while (i >= 0 && charIndex(rank[i]) === 0) {
-    i--;
+  // First char is already minimum, need to go deeper
+  // Find the midpoint between rank and a string of all minimums
+  if (rank.length === 1) {
+    // rank is just the minimum char, prefix doesn't work
+    // Return minimum + midpoint
+    return FIRST_CHAR + MID_CHAR;
   }
   
-  if (i >= 0) {
-    // Decrement this character and append midpoint
-    return rank.slice(0, i) + indexChar(charIndex(rank[i]) - 1) + MID_CHAR;
+  // Find position where we can decrement
+  for (let i = 1; i < rank.length; i++) {
+    const idx = charIndex(rank[i]);
+    if (idx > 1) {
+      // Found room - decrement this position
+      return rank.slice(0, i) + indexChar(idx - 1);
+    } else if (idx === 1) {
+      // Would go to 0, add midpoint after
+      return rank.slice(0, i) + FIRST_CHAR + MID_CHAR;
+    }
+    // idx === 0, continue to next position
   }
   
-  // All characters are '0' (which shouldn't normally happen)
-  // Go to a smaller prefix
-  return FIRST_CHAR + MID_CHAR;
+  // All characters are minimum, append midpoint
+  return rank + MID_CHAR;
 }
 
 /**
