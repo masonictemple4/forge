@@ -12,6 +12,9 @@ import { Button } from "~/components/ui/button";
 import { DraggableTaskCard, TaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
+// Card height estimate for virtualizer (doesn't need to be exact)
+const CARD_HEIGHT_ESTIMATE = 80;
+
 interface KanbanColumnProps {
   column: Column;
   tasks: Task[];
@@ -22,9 +25,6 @@ interface KanbanColumnProps {
   onTaskClick?: (task: Task) => void;
   isDragging?: boolean;
 }
-
-const CARD_HEIGHT = 120; // Approximate height of a task card in pixels
-const CARD_GAP = 8;
 
 /**
  * Inline editable column header
@@ -229,8 +229,6 @@ interface KanbanColumnInternalProps extends KanbanColumnProps {
   dragHandleProps?: Record<string, any>;
 }
 
-const HEADER_HEIGHT = 49; // Height of column header (p-3 + border-b)
-
 export function KanbanColumn({
   column,
   tasks,
@@ -243,30 +241,6 @@ export function KanbanColumn({
   dragHandleProps,
 }: KanbanColumnInternalProps) {
   const parentRef = useRef<HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerHeight, setContainerHeight] = useState(400); // Default fallback
-
-  // Measure container height for virtualizer
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const updateHeight = () => {
-      const rect = container.getBoundingClientRect();
-      if (rect.height > 0) {
-        setContainerHeight(rect.height - HEADER_HEIGHT);
-      }
-    };
-
-    // Initial measurement
-    updateHeight();
-
-    // Re-measure on resize
-    const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(container);
-
-    return () => resizeObserver.disconnect();
-  }, []);
 
   // Set up droppable zone for the column
   const { setNodeRef, isOver: isDropOver } = useDroppable({
@@ -278,10 +252,11 @@ export function KanbanColumn({
   });
 
   // Vertical virtualizer for cards within this column
+  // Uses CSS-driven height from flex-1 - no JS measurement needed
   const virtualizer = useVirtualizer({
     count: tasks.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => CARD_HEIGHT + CARD_GAP,
+    estimateSize: () => CARD_HEIGHT_ESTIMATE,
     overscan: 5, // Render 5 extra items above/below viewport
   });
 
@@ -294,32 +269,30 @@ export function KanbanColumn({
 
   return (
     <div
-      ref={containerRef}
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
         isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
         isDragging && "shadow-lg"
       )}
     >
-      {/* Column Header with drag handle */}
-      <ColumnHeader
-        column={column}
-        taskCount={tasks.length}
-        onRename={onRename}
-        onAddTask={onAddTask}
-        dragHandleProps={dragHandleProps}
-      />
+      {/* Column Header - fixed height, won't shrink */}
+      <div className="shrink-0">
+        <ColumnHeader
+          column={column}
+          taskCount={tasks.length}
+          onRename={onRename}
+          onAddTask={onAddTask}
+          dragHandleProps={dragHandleProps}
+        />
+      </div>
 
-      {/* Scrollable Task List with Virtualization */}
+      {/* Scrollable Task List with Virtualization - fills remaining space */}
       <div
         ref={(node) => {
           setNodeRef(node);
           (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
-        className="overflow-auto p-2"
-        style={{
-          height: `${containerHeight}px`,
-        }}
+        className="flex-1 min-h-0 overflow-auto p-2"
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <div
@@ -397,14 +370,16 @@ export function SimpleKanbanColumn({
         isDragging && "shadow-lg"
       )}
     >
-      {/* Column Header with drag handle */}
-      <ColumnHeader
-        column={column}
-        taskCount={tasks.length}
-        onRename={onRename}
-        onAddTask={onAddTask}
-        dragHandleProps={dragHandleProps}
-      />
+      {/* Column Header - fixed height, won't shrink */}
+      <div className="shrink-0">
+        <ColumnHeader
+          column={column}
+          taskCount={tasks.length}
+          onRename={onRename}
+          onAddTask={onAddTask}
+          dragHandleProps={dragHandleProps}
+        />
+      </div>
 
       <div ref={setNodeRef} className="flex-1 min-h-0 overflow-auto p-2 space-y-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
