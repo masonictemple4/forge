@@ -3,8 +3,6 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
 import {
   useSortable,
-} from "@dnd-kit/sortable";
-import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
@@ -25,12 +23,200 @@ interface KanbanColumnProps {
 const CARD_HEIGHT = 120; // Approximate height of a task card in pixels
 const CARD_GAP = 8;
 
+/**
+ * Inline editable column header
+ */
+function ColumnHeader({
+  column,
+  taskCount,
+  onRename,
+  dragHandleProps,
+}: {
+  column: Column;
+  taskCount: number;
+  onRename?: (columnId: string, newTitle: string) => void;
+  dragHandleProps?: Record<string, any>;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(column.title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const handleDoubleClick = useCallback(() => {
+    if (onRename) {
+      setEditValue(column.title);
+      setIsEditing(true);
+    }
+  }, [column.title, onRename]);
+
+  const handleSave = useCallback(() => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== column.title && onRename) {
+      onRename(column.id, trimmed);
+    }
+    setIsEditing(false);
+  }, [editValue, column.id, column.title, onRename]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      setEditValue(column.title);
+      setIsEditing(false);
+    }
+  }, [handleSave, column.title]);
+
+  return (
+    <div 
+      className="flex items-center justify-between p-3 border-b bg-card rounded-t-lg"
+      {...dragHandleProps}
+    >
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        {column.color && (
+          <div
+            className="w-3 h-3 rounded-full shrink-0"
+            style={{ backgroundColor: column.color }}
+          />
+        )}
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={handleKeyDown}
+            className="font-semibold text-sm bg-transparent border border-primary/50 rounded px-1 py-0.5 outline-none focus:ring-1 focus:ring-primary w-full"
+          />
+        ) : (
+          <h3 
+            className={cn(
+              "font-semibold text-sm truncate",
+              onRename && "cursor-text hover:bg-muted/50 rounded px-1 py-0.5 -mx-1 -my-0.5"
+            )}
+            onDoubleClick={handleDoubleClick}
+            title={onRename ? "Double-click to rename" : undefined}
+          >
+            {column.title}
+          </h3>
+        )}
+        <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+          {taskCount}
+        </span>
+      </div>
+      {column.limit && taskCount > column.limit && (
+        <span className="text-xs text-destructive font-medium shrink-0 ml-2">
+          Over limit!
+        </span>
+      )}
+      {/* Drag handle indicator */}
+      {dragHandleProps && (
+        <div className="ml-2 opacity-50 hover:opacity-100 cursor-grab active:cursor-grabbing">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+            <circle cx="5" cy="4" r="1.5" />
+            <circle cx="11" cy="4" r="1.5" />
+            <circle cx="5" cy="8" r="1.5" />
+            <circle cx="11" cy="8" r="1.5" />
+            <circle cx="5" cy="12" r="1.5" />
+            <circle cx="11" cy="12" r="1.5" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Sortable wrapper for draggable columns
+ */
+export function SortableKanbanColumn(props: KanbanColumnProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `column-${props.column.id}`,
+    data: {
+      type: "column",
+      column: props.column,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <SimpleKanbanColumn
+        {...props}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
+/**
+ * Sortable wrapper for virtualized columns
+ */
+export function SortableVirtualizedKanbanColumn(props: KanbanColumnProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `column-${props.column.id}`,
+    data: {
+      type: "column",
+      column: props.column,
+    },
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <KanbanColumn
+        {...props}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
+    </div>
+  );
+}
+
+interface KanbanColumnInternalProps extends KanbanColumnProps {
+  dragHandleProps?: Record<string, any>;
+}
+
 export function KanbanColumn({
   column,
   tasks,
   isOver,
   isDraggingOver,
-}: KanbanColumnProps) {
+  onRename,
+  isDragging,
+  dragHandleProps,
+}: KanbanColumnInternalProps) {
   const parentRef = useRef<HTMLDivElement>(null);
 
   // Set up droppable zone for the column
@@ -61,29 +247,17 @@ export function KanbanColumn({
     <div
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
-        isOverColumn && "ring-2 ring-primary/50 bg-muted/50"
+        isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
+        isDragging && "shadow-lg"
       )}
     >
-      {/* Column Header */}
-      <div className="flex items-center justify-between p-3 border-b bg-card rounded-t-lg">
-        <div className="flex items-center gap-2">
-          {column.color && (
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: column.color }}
-            />
-          )}
-          <h3 className="font-semibold text-sm">{column.title}</h3>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {tasks.length}
-          </span>
-        </div>
-        {column.limit && tasks.length > column.limit && (
-          <span className="text-xs text-destructive font-medium">
-            Over limit!
-          </span>
-        )}
-      </div>
+      {/* Column Header with drag handle */}
+      <ColumnHeader
+        column={column}
+        taskCount={tasks.length}
+        onRename={onRename}
+        dragHandleProps={dragHandleProps}
+      />
 
       {/* Scrollable Task List with Virtualization */}
       <div
@@ -148,7 +322,10 @@ export function SimpleKanbanColumn({
   column,
   tasks,
   isOver,
-}: KanbanColumnProps) {
+  onRename,
+  isDragging,
+  dragHandleProps,
+}: KanbanColumnInternalProps) {
   const { setNodeRef, isOver: isDropOver } = useDroppable({
     id: `column-${column.id}`,
     data: {
@@ -164,23 +341,17 @@ export function SimpleKanbanColumn({
     <div
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
-        isOverColumn && "ring-2 ring-primary/50 bg-muted/50"
+        isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
+        isDragging && "shadow-lg"
       )}
     >
-      <div className="flex items-center justify-between p-3 border-b bg-card rounded-t-lg">
-        <div className="flex items-center gap-2">
-          {column.color && (
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: column.color }}
-            />
-          )}
-          <h3 className="font-semibold text-sm">{column.title}</h3>
-          <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-            {tasks.length}
-          </span>
-        </div>
-      </div>
+      {/* Column Header with drag handle */}
+      <ColumnHeader
+        column={column}
+        taskCount={tasks.length}
+        onRename={onRename}
+        dragHandleProps={dragHandleProps}
+      />
 
       <div ref={setNodeRef} className="flex-1 overflow-auto p-2 space-y-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
