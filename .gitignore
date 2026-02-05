@@ -36,3 +36,4 @@ coverage/
 packages/dag/dist/
 packages/dag/node_modules/
 app.config.timestamp_*.js
+.vercel

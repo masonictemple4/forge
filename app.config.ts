@@ -7,6 +7,6 @@ export default defineConfig({
     plugins: [tsConfigPaths(), tailwindcss()],
   },
   server: {
-    preset: "node-server",
+    preset: process.env.VERCEL ? "vercel" : "node-server",
   },
 });
