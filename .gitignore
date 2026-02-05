@@ -33,3 +33,5 @@ coverage/
 # Database
 *.db
 *.sqlite
+packages/dag/dist/
+packages/dag/node_modules/
