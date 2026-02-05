@@ -1,4 +1,5 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { queryKeys } from "./client";
 import { useTasks, tasksToBoardColumns } from "./tasks";
 import type { Board, BoardColumn, Task, TaskStatus } from "./types";
@@ -31,16 +32,19 @@ async function fetchBoard(id: string): Promise<Board> {
  */
 export function useBoard(boardId: string = "default") {
   const { data: tasks, isLoading, error, refetch } = useTasks();
-  
-  // Compute columns from tasks
-  const columns = tasks ? tasksToBoardColumns(tasks) : [];
+  const columns = useMemo(() => (tasks ? tasksToBoardColumns(tasks) : []), [tasks]);
+  const data = useMemo(
+    () =>
+      ({
+        id: boardId,
+        name: "Board",
+        columns,
+      } as Board),
+    [boardId, columns]
+  );
   
   return {
-    data: {
-      id: boardId,
-      name: "Board",
-      columns,
-    } as Board,
+    data,
     tasks,
     isLoading,
     error,

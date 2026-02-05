@@ -14,7 +14,7 @@ function StressTestPage() {
   const [renderCount, setRenderCount] = useState(0);
 
   const handleTaskMove = (
-    taskId: number,
+    taskId: string,
     sourceColumnId: string,
     targetColumnId: string,
     newRank: string

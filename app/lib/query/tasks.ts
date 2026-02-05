@@ -4,6 +4,7 @@ import {
   useQueryClient,
   type QueryClient,
 } from "@tanstack/react-query";
+import { after, before, between } from "@forge/lexorank";
 import { queryKeys } from "./client";
 import type {
   Task,
@@ -271,32 +272,31 @@ export function useMoveTask() {
         const targetTasks = previousTasks
           .filter((t) => t.status === targetStatus && t.id !== taskId)
           .sort((a, b) => a.rank.localeCompare(b.rank));
-        
-        if (beforeTaskId) {
-          const beforeTask = targetTasks.find((t) => t.id === beforeTaskId);
-          const beforeIndex = targetTasks.findIndex((t) => t.id === beforeTaskId);
-          const afterTask = beforeIndex > 0 ? targetTasks[beforeIndex - 1] : null;
-          
-          if (beforeTask && afterTask) {
-            newRank = afterTask.rank + "m"; // Simple midpoint approximation
-          } else if (beforeTask) {
-            newRank = String.fromCharCode(beforeTask.rank.charCodeAt(0) - 1);
+
+        const beforeTask = beforeTaskId
+          ? targetTasks.find((t) => t.id === beforeTaskId) ?? null
+          : null;
+        const afterTask = afterTaskId
+          ? targetTasks.find((t) => t.id === afterTaskId) ?? null
+          : null;
+
+        const beforeRank = beforeTask?.rank ?? null;
+        const afterRank = afterTask?.rank ?? null;
+
+        try {
+          if (afterRank && beforeRank) {
+            newRank = between(afterRank, beforeRank);
+          } else if (afterRank) {
+            newRank = after(afterRank);
+          } else if (beforeRank) {
+            newRank = before(beforeRank);
+          } else if (targetTasks.length > 0) {
+            newRank = after(targetTasks[targetTasks.length - 1].rank);
+          } else {
+            newRank = "V";
           }
-        } else if (afterTaskId) {
-          const afterTask = targetTasks.find((t) => t.id === afterTaskId);
-          const afterIndex = targetTasks.findIndex((t) => t.id === afterTaskId);
-          const beforeTask = afterIndex < targetTasks.length - 1 
-            ? targetTasks[afterIndex + 1] 
-            : null;
-          
-          if (afterTask && beforeTask) {
-            newRank = afterTask.rank + "m";
-          } else if (afterTask) {
-            newRank = afterTask.rank + "z";
-          }
-        } else if (targetTasks.length > 0) {
-          // Move to end
-          newRank = targetTasks[targetTasks.length - 1].rank + "z";
+        } catch {
+          newRank = "V";
         }
       }
       

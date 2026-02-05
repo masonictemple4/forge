@@ -63,7 +63,7 @@ function VirtualizedSortableItem({
   const combinedTransform = `translate3d(${xOffset}px, ${yOffset}px, 0) scaleX(${scaleX}) scaleY(${scaleY})`;
 
   const customTransition = isSorting || transition
-    ? `transform 200ms cubic-bezier(0.25, 0.1, 0.25, 1)`
+    ? "transform 170ms cubic-bezier(0.2, 0, 0, 1)"
     : undefined;
 
   const style: React.CSSProperties = {
@@ -260,8 +260,8 @@ export function SortableKanbanColumn(props: KanbanColumnProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition ? "transform 180ms cubic-bezier(0.2, 0, 0, 1)" : undefined,
+    opacity: isDragging ? 0.75 : 1,
   };
 
   return (
@@ -361,7 +361,7 @@ export function KanbanColumn({
       ref={columnRef}
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
-        isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
+        isOverColumn && "ring-1 ring-primary/35 bg-muted/40",
         isDragging && "shadow-lg"
       )}
     >
@@ -461,8 +461,8 @@ export function SortableVirtualizedKanbanColumn(props: KanbanColumnProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
+    transition: transition ? "transform 180ms cubic-bezier(0.2, 0, 0, 1)" : undefined,
+    opacity: isDragging ? 0.75 : 1,
   };
 
   return (

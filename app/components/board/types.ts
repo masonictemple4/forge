@@ -3,13 +3,13 @@
  */
 
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   description?: string;
   columnId: string;
   rank: string; // LexoRank for ordering
-  blockedBy?: number[]; // Task IDs that block this task
-  blocks?: number[]; // Task IDs this task blocks
+  blockedBy?: string[]; // Task IDs that block this task
+  blocks?: string[]; // Task IDs this task blocks
   labels?: string[];
   assignee?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
@@ -27,7 +27,7 @@ export interface Column {
 
 export interface BoardState {
   columns: Column[];
-  tasks: Map<number, Task>; // Quick lookup by ID
+  tasks: Map<string, Task>; // Quick lookup by ID
 }
 
 export type DragType = 'task' | 'column';

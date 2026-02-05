@@ -35,7 +35,7 @@ interface KanbanBoardConnectedProps {
  */
 function apiTaskToBoardTask(task: ApiTask): Task {
   return {
-    id: parseInt(task.id, 10) || Date.now(), // Handle temp IDs
+    id: task.id,
     title: task.title,
     description: task.description ?? undefined,
     columnId: task.status,
@@ -87,7 +87,7 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
   // Handle task move with optimistic update
   const handleTaskMove = useCallback(
     (
-      taskId: number,
+      taskId: string,
       sourceColumnId: string,
       targetColumnId: string,
       newRank: string
@@ -118,7 +118,7 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
 
       moveTaskMutation.mutate(
         {
-          taskId: String(taskId),
+          taskId,
           targetStatus: targetColumnId as TaskStatus,
           beforeTaskId,
           afterTaskId,
@@ -206,7 +206,7 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
     (task: Task, data: TaskFormData) => {
       updateTaskMutation.mutate(
         {
-          id: String(task.id),
+          id: task.id,
           title: data.title,
           description: data.description,
           status: data.status as TaskStatus,
@@ -230,7 +230,7 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
   // Handle delete task
   const handleDeleteTask = useCallback(
     (task: Task) => {
-      deleteTaskMutation.mutate(String(task.id), {
+      deleteTaskMutation.mutate(task.id, {
         onSuccess: () => {
           toast.success("Task deleted", "The task has been removed from the board");
         },

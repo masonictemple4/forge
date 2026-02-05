@@ -27,7 +27,7 @@ export function TaskCard({ task, isDragging, isOverlay, onClick }: TaskCardProps
       className={cn(
         "cursor-grab border-l-4 transition-shadow hover:shadow-md",
         task.priority ? priorityColors[task.priority] : "border-l-transparent",
-        isOverlay && "shadow-xl rotate-2 scale-105 cursor-grabbing",
+        isOverlay && "shadow-lg scale-[1.01] cursor-grabbing",
         hasBlockers && "opacity-75 bg-status-blocked/10"
       )}
     >
@@ -85,8 +85,8 @@ export function TaskCard({ task, isDragging, isOverlay, onClick }: TaskCardProps
 }
 
 // Consistent animation timing for all sortable items
-const ANIMATION_DURATION = 200;
-const ANIMATION_EASING = "cubic-bezier(0.25, 0.1, 0.25, 1)";
+const ANIMATION_DURATION = 170;
+const ANIMATION_EASING = "cubic-bezier(0.2, 0, 0, 1)";
 
 interface DraggableTaskCardProps {
   task: Task;

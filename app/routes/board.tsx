@@ -12,7 +12,7 @@ function BoardPage() {
   const initialColumns = useMemo(() => generateMockData(5, 50), []);
 
   const handleTaskMove = (
-    taskId: number,
+    taskId: string,
     sourceColumnId: string,
     targetColumnId: string,
     newRank: string
