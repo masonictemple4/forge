@@ -1,0 +1,4 @@
+interface:
+  display_name: "Forge Dashboard Delivery"
+  short_description: "Ship proposal-driven dashboard features by phase"
+  default_prompt: "Use $forge-dashboard-delivery to implement the next dashboard milestone from docs/DASHBOARD_PROPOSAL.md."

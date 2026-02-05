@@ -1,0 +1,4 @@
+interface:
+  display_name: "Forge Contract Sync"
+  short_description: "Keep Drizzle, Hono, and query contracts aligned"
+  default_prompt: "Use $forge-fullstack-contract-sync to implement this API or schema change end-to-end."
