@@ -45,6 +45,8 @@ interface KanbanBoardProps {
     afterId: string | null
   ) => void;
   onColumnRename?: (columnId: string, newTitle: string) => void;
+  onAddTask?: (columnId: string) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const COLUMN_WIDTH = 288 + 8; // 288px column + 8px gap
@@ -56,6 +58,8 @@ export function KanbanBoard({
   onTaskMove,
   onColumnReorder,
   onColumnRename,
+  onAddTask,
+  onTaskClick,
 }: KanbanBoardProps) {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -351,6 +355,8 @@ export function KanbanBoard({
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
                       onRename={onColumnRename ? handleColumnRename : undefined}
+                      onAddTask={onAddTask}
+                      onTaskClick={onTaskClick}
                     />
                   ) : (
                     <SortableKanbanColumn
@@ -358,6 +364,8 @@ export function KanbanBoard({
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
                       onRename={onColumnRename ? handleColumnRename : undefined}
+                      onAddTask={onAddTask}
+                      onTaskClick={onTaskClick}
                     />
                   )}
                 </div>

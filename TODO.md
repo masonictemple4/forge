@@ -10,9 +10,9 @@
 - [x] Fix cross-column drag animation (match in-column animation)
 - [x] Landing page (marketing/hero) - Hero, features, CTAs, responsive design
 - [x] Login page - GitHub, Google, Apple OAuth buttons + email/password form
-- [ ] Auth: GitHub OAuth (self-implemented)
-- [ ] Auth: Google OAuth (self-implemented)
-- [ ] Auth: Apple OAuth (self-implemented)
+- [x] Auth: GitHub OAuth (self-implemented)
+- [x] Auth: Google OAuth (self-implemented)
+- [x] Auth: Apple OAuth (self-implemented)
 - [x] User sessions & JWT handling
 - [x] Email/password auth with registration
 
