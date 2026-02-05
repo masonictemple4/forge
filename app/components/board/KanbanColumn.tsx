@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -9,7 +9,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
-import { DraggableTaskCard, TaskCard } from "./TaskCard";
+import { DraggableTaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
 // Card height estimate for virtualizer (fixed, no dynamic measurement)
@@ -180,42 +180,6 @@ export function SortableKanbanColumn(props: KanbanColumnProps) {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <SimpleKanbanColumn
-        {...props}
-        isDragging={isDragging}
-        dragHandleProps={{ ...attributes, ...listeners }}
-      />
-    </div>
-  );
-}
-
-/**
- * Sortable wrapper for virtualized columns
- */
-export function SortableVirtualizedKanbanColumn(props: KanbanColumnProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id: `column-${props.column.id}`,
-    data: {
-      type: "column",
-      column: props.column,
-    },
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
-  return (
-    <div ref={setNodeRef} style={style}>
       <KanbanColumn
         {...props}
         isDragging={isDragging}
@@ -229,18 +193,24 @@ interface KanbanColumnInternalProps extends KanbanColumnProps {
   dragHandleProps?: Record<string, any>;
 }
 
+/**
+ * Virtualized Kanban column using TanStack Virtual
+ * Uses calculated height to ensure virtualizer works correctly
+ */
 export function KanbanColumn({
   column,
   tasks,
   isOver,
-  isDraggingOver,
   onRename,
   onAddTask,
   onTaskClick,
   isDragging,
   dragHandleProps,
 }: KanbanColumnInternalProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const columnRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [scrollHeight, setScrollHeight] = useState(400); // fallback height
+  const [isMounted, setIsMounted] = useState(false);
 
   // Set up droppable zone for the column
   const { setNodeRef, isOver: isDropOver } = useDroppable({
@@ -251,24 +221,52 @@ export function KanbanColumn({
     },
   });
 
+  // Mark as mounted after hydration
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Calculate scroll container height based on column height minus header
+  useLayoutEffect(() => {
+    if (!isMounted) return;
+
+    const updateHeight = () => {
+      if (columnRef.current) {
+        const columnHeight = columnRef.current.clientHeight;
+        const headerHeight = 52; // header height (p-3 = 12px padding + ~28px content)
+        const calculatedHeight = columnHeight - headerHeight;
+        if (calculatedHeight > 0) {
+          setScrollHeight(calculatedHeight);
+        }
+      }
+    };
+
+    updateHeight();
+
+    // Update on resize
+    const resizeObserver = new ResizeObserver(updateHeight);
+    if (columnRef.current) {
+      resizeObserver.observe(columnRef.current);
+    }
+
+    return () => resizeObserver.disconnect();
+  }, [isMounted]);
+
   // Vertical virtualizer for cards within this column
-  // Uses fixed estimate size for simplicity - no dynamic measurement
   const virtualizer = useVirtualizer({
     count: tasks.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => scrollRef.current,
     estimateSize: () => CARD_HEIGHT_ESTIMATE,
     overscan: 5, // Render 5 extra items above/below viewport
   });
 
   const virtualItems = virtualizer.getVirtualItems();
-
-  // Get sortable IDs for dnd-kit
   const taskIds = tasks.map((task) => `task-${task.id}`);
-
-  const isOverColumn = isOver || isDraggingOver || isDropOver;
+  const isOverColumn = isOver || isDropOver;
 
   return (
     <div
+      ref={columnRef}
       className={cn(
         "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
         isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
@@ -286,13 +284,14 @@ export function KanbanColumn({
         />
       </div>
 
-      {/* Scrollable Task List with Virtualization - fills remaining space */}
+      {/* Scrollable Task List with Virtualization */}
       <div
         ref={(node) => {
           setNodeRef(node);
-          (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+          (scrollRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
-        className="flex-1 min-h-0 overflow-y-auto p-2"
+        style={{ height: scrollHeight }}
+        className="overflow-y-auto p-2"
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <div
@@ -337,62 +336,37 @@ export function KanbanColumn({
 }
 
 /**
- * Non-virtualized column for small task counts (< 20)
- * Use this when virtualization overhead isn't worth it
+ * Sortable wrapper for virtualized columns
  */
-export function SimpleKanbanColumn({
-  column,
-  tasks,
-  isOver,
-  onRename,
-  onAddTask,
-  onTaskClick,
-  isDragging,
-  dragHandleProps,
-}: KanbanColumnInternalProps) {
-  const { setNodeRef, isOver: isDropOver } = useDroppable({
-    id: `column-${column.id}`,
+export function SortableVirtualizedKanbanColumn(props: KanbanColumnProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: `column-${props.column.id}`,
     data: {
       type: "column",
-      column,
+      column: props.column,
     },
   });
 
-  const taskIds = tasks.map((task) => `task-${task.id}`);
-  const isOverColumn = isOver || isDropOver;
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
 
   return (
-    <div
-      className={cn(
-        "flex flex-col h-full w-72 shrink-0 bg-muted/30 rounded-lg border",
-        isOverColumn && "ring-2 ring-primary/50 bg-muted/50",
-        isDragging && "shadow-lg"
-      )}
-    >
-      {/* Column Header - fixed height, won't shrink */}
-      <div className="shrink-0">
-        <ColumnHeader
-          column={column}
-          taskCount={tasks.length}
-          onRename={onRename}
-          onAddTask={onAddTask}
-          dragHandleProps={dragHandleProps}
-        />
-      </div>
-
-      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-y-auto p-2">
-        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-          {tasks.map((task) => (
-            <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
-          ))}
-        </SortableContext>
-
-        {tasks.length === 0 && (
-          <div className="flex items-center justify-center h-24 text-muted-foreground text-sm">
-            Drop tasks here
-          </div>
-        )}
-      </div>
+    <div ref={setNodeRef} style={style}>
+      <KanbanColumn
+        {...props}
+        isDragging={isDragging}
+        dragHandleProps={{ ...attributes, ...listeners }}
+      />
     </div>
   );
 }

@@ -2,8 +2,7 @@ export { KanbanBoard, generateMockData } from "./KanbanBoard";
 export { KanbanBoardConnected } from "./KanbanBoardConnected";
 export { 
   KanbanColumn, 
-  SimpleKanbanColumn, 
-  SortableKanbanColumn, 
+  SortableKanbanColumn,
   SortableVirtualizedKanbanColumn 
 } from "./KanbanColumn";
 export { TaskCard, DraggableTaskCard } from "./TaskCard";

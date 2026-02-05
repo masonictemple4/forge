@@ -1,5 +1,4 @@
-import { useRef, useState, useCallback, useMemo } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useState, useCallback, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -21,12 +20,7 @@ import {
 import { createPortal } from "react-dom";
 import { between, after, before } from "@forge/lexorank";
 
-import { 
-  KanbanColumn, 
-  SimpleKanbanColumn, 
-  SortableKanbanColumn, 
-  SortableVirtualizedKanbanColumn 
-} from "./KanbanColumn";
+import { SortableKanbanColumn } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import type { Column, Task, DragData } from "./types";
 
@@ -49,9 +43,6 @@ interface KanbanBoardProps {
   onTaskClick?: (task: Task) => void;
 }
 
-const COLUMN_WIDTH = 288 + 8; // 288px column + 8px gap
-const VIRTUALIZATION_THRESHOLD = 20; // Use virtualization when columns have > 20 tasks
-
 export function KanbanBoard({
   columns: initialColumns,
   onColumnsChange,
@@ -65,8 +56,6 @@ export function KanbanBoard({
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [activeColumn, setActiveColumn] = useState<Column | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
-
-  const parentRef = useRef<HTMLDivElement>(null);
 
   // Update columns when props change
   useMemo(() => {
@@ -85,16 +74,6 @@ export function KanbanBoard({
     })
   );
 
-  // Horizontal virtualizer for columns
-  const columnVirtualizer = useVirtualizer({
-    count: columns.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => COLUMN_WIDTH,
-    horizontal: true,
-    overscan: 2, // Render 2 extra columns on each side
-  });
-
-  const virtualColumns = columnVirtualizer.getVirtualItems();
   const columnIds = columns.map((col) => `column-${col.id}`);
 
   // Find column by ID
@@ -310,68 +289,23 @@ export function KanbanBoard({
       onDragEnd={handleDragEnd}
     >
       <div
-        ref={parentRef}
-        className="flex h-full min-h-0 w-full overflow-auto bg-background p-4"
-        style={{
-          // Enable horizontal scrolling
-          overflowX: "auto",
-          overflowY: "hidden",
-        }}
+        className="flex h-full min-h-0 w-full overflow-x-auto overflow-y-hidden bg-background p-4 gap-2"
       >
         <SortableContext
           items={columnIds}
           strategy={horizontalListSortingStrategy}
         >
-          <div
-            style={{
-              width: `${columnVirtualizer.getTotalSize()}px`,
-              height: "100%",
-              position: "relative",
-            }}
-          >
-            {virtualColumns.map((virtualColumn) => {
-              const column = columns[virtualColumn.index];
-              if (!column) return null;
-
-              const useVirtualization =
-                column.tasks.length > VIRTUALIZATION_THRESHOLD;
-
-              return (
-                <div
-                  key={virtualColumn.key}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    height: "100%",
-                    width: `${virtualColumn.size}px`,
-                    transform: `translateX(${virtualColumn.start}px)`,
-                  }}
-                  className="pr-2"
-                >
-                  {useVirtualization ? (
-                    <SortableVirtualizedKanbanColumn
-                      column={column}
-                      tasks={column.tasks}
-                      isOver={overId === `column-${column.id}`}
-                      onRename={onColumnRename ? handleColumnRename : undefined}
-                      onAddTask={onAddTask}
-                      onTaskClick={onTaskClick}
-                    />
-                  ) : (
-                    <SortableKanbanColumn
-                      column={column}
-                      tasks={column.tasks}
-                      isOver={overId === `column-${column.id}`}
-                      onRename={onColumnRename ? handleColumnRename : undefined}
-                      onAddTask={onAddTask}
-                      onTaskClick={onTaskClick}
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          {columns.map((column) => (
+            <SortableKanbanColumn
+              key={column.id}
+              column={column}
+              tasks={column.tasks}
+              isOver={overId === `column-${column.id}`}
+              onRename={onColumnRename ? handleColumnRename : undefined}
+              onAddTask={onAddTask}
+              onTaskClick={onTaskClick}
+            />
+          ))}
         </SortableContext>
       </div>
 
