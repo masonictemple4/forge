@@ -36,4 +36,4 @@ export {
   createComparator,
   getCharset,
   getMaxLength,
-} from './lexorank.js';
+} from './lexorank';

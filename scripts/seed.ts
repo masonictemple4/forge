@@ -10,7 +10,17 @@
  */
 
 import { db, tasks, dependencies, type TaskStatus } from "../db";
-import { initial, after } from "../packages/lexorank/src/lexorank";
+// Simple inline rank generation (avoids module resolution issues)
+const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+function initial(): string { return 'M'; }
+function after(rank: string): string {
+  const lastChar = rank[rank.length - 1];
+  const idx = CHARS.indexOf(lastChar);
+  if (idx < CHARS.length - 1) {
+    return rank.slice(0, -1) + CHARS[idx + 1];
+  }
+  return rank + 'A';
+}
 import { sql } from "drizzle-orm";
 
 // Task templates organized by status
