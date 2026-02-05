@@ -1,8 +1,6 @@
 # Forge - Project TODO
 
 ## 🚨 In Progress
-- [ ] Migrate from @tanstack/start to @tanstack/react-start (deprecation warning)
-- [ ] Add notFoundComponent to router config
 - [ ] Task detail view (click to open modal/drawer)
 - [ ] Add new tasks (UI + API)
 - [ ] Edit tasks (inline or modal)
@@ -19,6 +17,8 @@
 - [ ] Email/password auth with registration
 
 ## ✅ Completed
+- [x] Migrate from @tanstack/start to @tanstack/react-start (deprecation warning fixed)
+- [x] Add notFoundComponent to router config - Created NotFound component
 - [x] Fix TanStack Start version compatibility issue - Pinned to 1.120.17
 - [x] Verify dev server runs cleanly (`pnpm dev`)
 - [x] Create `.env.example` with all required variables
