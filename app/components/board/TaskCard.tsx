@@ -8,6 +8,7 @@ interface TaskCardProps {
   task: Task;
   isDragging?: boolean;
   isOverlay?: boolean;
+  onClick?: () => void;
 }
 
 const priorityColors = {
@@ -17,7 +18,7 @@ const priorityColors = {
   critical: "border-l-red-500",
 };
 
-export function TaskCard({ task, isDragging, isOverlay }: TaskCardProps) {
+export function TaskCard({ task, isDragging, isOverlay, onClick }: TaskCardProps) {
   const hasBlockers = task.blockedBy && task.blockedBy.length > 0;
   const isBlocking = task.blocks && task.blocks.length > 0;
 
@@ -87,11 +88,16 @@ export function TaskCard({ task, isDragging, isOverlay }: TaskCardProps) {
 const ANIMATION_DURATION = 200;
 const ANIMATION_EASING = "cubic-bezier(0.25, 0.1, 0.25, 1)";
 
+interface DraggableTaskCardProps {
+  task: Task;
+  onClick?: (task: Task) => void;
+}
+
 /**
  * Draggable wrapper for TaskCard with dnd-kit
  * Uses consistent animation for both in-column and cross-column moves
  */
-export function DraggableTaskCard({ task }: { task: Task }) {
+export function DraggableTaskCard({ task, onClick }: DraggableTaskCardProps) {
   const {
     attributes,
     listeners,
@@ -123,8 +129,21 @@ export function DraggableTaskCard({ task }: { task: Task }) {
     opacity: isDragging ? 0 : 1,
   };
 
+  // Track if this was a drag vs click
+  const handleClick = (e: React.MouseEvent) => {
+    // Don't trigger click if we're dragging
+    if (isDragging) return;
+    onClick?.(task);
+  };
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      onClick={handleClick}
+    >
       <TaskCard task={task} isDragging={isDragging} />
     </div>
   );

@@ -82,6 +82,9 @@ importers:
       '@tanstack/router-plugin':
         specifier: 1.120.17
         version: 1.120.17(@tanstack/react-router@1.120.17(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@6.4.1(@types/node@22.19.8)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0)(tsx@4.21.0))
+      argon2:
+        specifier: ^0.44.0
+        version: 0.44.0
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -312,6 +315,9 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@epic-web/invariant@1.0.0':
+    resolution: {integrity: sha512-lrTPqgvfFQtR/eY/qkIzp98OGdNJu0m5ji3q/nJI8v3SXkRKEnWiOxMmbvcSoAIzv/cGiuvRy57k4suKQSAdwA==}
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
@@ -1367,6 +1373,10 @@ packages:
     resolution: {integrity: sha512-tmmZ3lQxAe/k/+rNnXQRawJ4NjxO2hqiOLTHvWchtGZULp4RyFeh6aU4XdOYBFe2KE1oShQTv4AblOs2iOrNnQ==}
     engines: {node: '>= 10.0.0'}
 
+  '@phc/format@1.0.0':
+    resolution: {integrity: sha512-m7X9U6BG2+J+R1lSOdCiITLLrxm+cWlNI3HUFA92oLO77ObGNzaKdh8pMLqdZcshtkKuV84olNNXDfMc4FezBQ==}
+    engines: {node: '>=10'}
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -2387,6 +2397,10 @@ packages:
     resolution: {integrity: sha512-ZcbTaIqJOfCc03QwD468Unz/5Ir8ATtvAHsK+FdXbDIbGfihqh9mrvdcYunQzqn4HrvWWaFyaxJhGZagaJJpPQ==}
     engines: {node: '>= 14'}
 
+  argon2@0.44.0:
+    resolution: {integrity: sha512-zHPGN3S55sihSQo0dBbK0A5qpi2R31z7HZDZnry3ifOyj8bZZnpZND2gpmhnRGO1V/d555RwBqIK5W4Mrmv3ig==}
+    engines: {node: '>=16.17.0'}
+
   aria-hidden@1.2.6:
     resolution: {integrity: sha512-ik3ZgC9dY/lYVVM++OISsaYDeg1tb0VtP5uL3ouh1koGOaUMDPpbFIei4JkFimWUFPn90sbMNMXQAIVOlnYKJA==}
     engines: {node: '>=10'}
@@ -2596,6 +2610,11 @@ packages:
   croner@9.1.0:
     resolution: {integrity: sha512-p9nwwR4qyT5W996vBZhdvBCnMhicY5ytZkR4D1Xj0wuTDEiMnjwR57Q3RXYY/s0EpX6Ay3vgIcfaR+ewGHsi+g==}
     engines: {node: '>=18.0'}
+
+  cross-env@10.1.0:
+    resolution: {integrity: sha512-GsYosgnACZTADcmEyJctkJIoqAhHjttw7RsFrVoJNXbsWWqaq6Ym+7kZjq6mS45O0jij6vtiReppKQEtqWy6Dw==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -3415,6 +3434,10 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
+  node-addon-api@8.5.0:
+    resolution: {integrity: sha512-/bRZty2mXUIFY/xU5HLvveNHlswNJej+RnxBjOMkidWfwZzgTbPG1E3K5TOxRLOR+5hX7bSofy8yf1hZevMS8A==}
+    engines: {node: ^18 || ^20 || >= 21}
 
   node-fetch-native@1.6.7:
     resolution: {integrity: sha512-g9yhqoedzIUm0nTnTqAQvueMPVOuIY16bqgAJJC8XOOubYFNwz6IER9qs0Gq2Xd0+CecCKFjtdDTMA4u4xG06Q==}
@@ -4479,6 +4502,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@epic-web/invariant@1.0.0': {}
+
   '@esbuild-kit/core-utils@3.3.2':
     dependencies:
       esbuild: 0.18.20
@@ -5085,6 +5110,8 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.5.6
       '@parcel/watcher-win32-ia32': 2.5.6
       '@parcel/watcher-win32-x64': 2.5.6
+
+  '@phc/format@1.0.0': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -6445,6 +6472,13 @@ snapshots:
       - bare-abort-controller
       - react-native-b4a
 
+  argon2@0.44.0:
+    dependencies:
+      '@phc/format': 1.0.0
+      cross-env: 10.1.0
+      node-addon-api: 8.5.0
+      node-gyp-build: 4.8.4
+
   aria-hidden@1.2.6:
     dependencies:
       tslib: 2.8.1
@@ -6648,6 +6682,11 @@ snapshots:
       readable-stream: 4.7.0
 
   croner@9.1.0: {}
+
+  cross-env@10.1.0:
+    dependencies:
+      '@epic-web/invariant': 1.0.0
+      cross-spawn: 7.0.6
 
   cross-spawn@7.0.6:
     dependencies:
@@ -7494,6 +7533,8 @@ snapshots:
       - uploadthing
 
   node-addon-api@7.1.1: {}
+
+  node-addon-api@8.5.0: {}
 
   node-fetch-native@1.6.7: {}
 

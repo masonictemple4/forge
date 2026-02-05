@@ -7,7 +7,7 @@
 - [ ] Delete tasks (with confirmation)
 - [ ] Reorder columns (drag & drop)
 - [ ] Rename columns (inline edit)
-- [ ] Fix cross-column drag animation (match in-column animation)
+- [x] Fix cross-column drag animation (match in-column animation)
 - [ ] Landing page (marketing/hero)
 - [ ] Login page
 - [ ] Auth: GitHub OAuth (self-implemented)

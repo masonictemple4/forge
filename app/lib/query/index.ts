@@ -25,3 +25,17 @@ export {
   getTaskPosition,
   canMoveToStatus,
 } from "./boards";
+
+// Column queries and mutations
+export {
+  useColumns,
+  useColumn,
+  useCreateColumn,
+  useUpdateColumn,
+  useReorderColumn,
+  useDeleteColumn,
+  type ApiColumn,
+  type CreateColumnInput,
+  type UpdateColumnInput,
+  type ReorderColumnInput,
+} from "./columns";

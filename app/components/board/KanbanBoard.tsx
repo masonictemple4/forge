@@ -20,7 +20,6 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 import { between, after, before } from "@forge/lexorank";
 

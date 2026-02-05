@@ -1,10 +1,14 @@
-import { useRef, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
+import {
+  useSortable,
+} from "@dnd-kit/sortable";
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "~/lib/utils";
 import { DraggableTaskCard, TaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
@@ -14,6 +18,8 @@ interface KanbanColumnProps {
   tasks: Task[];
   isOver?: boolean;
   isDraggingOver?: boolean;
+  onRename?: (columnId: string, newTitle: string) => void;
+  isDragging?: boolean;
 }
 
 const CARD_HEIGHT = 120; // Approximate height of a task card in pixels
