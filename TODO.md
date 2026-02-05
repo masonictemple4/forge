@@ -16,6 +16,7 @@
 - [ ] Auth: Google OAuth (self-implemented)
 - [ ] Auth: Apple OAuth (self-implemented)
 - [ ] User sessions & JWT handling
+- [ ] Email/password auth with registration
 
 ## ✅ Completed
 - [x] Fix TanStack Start version compatibility issue - Pinned to 1.120.17
