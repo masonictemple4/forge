@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -25,11 +26,11 @@
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@tanstack/react-query": "^5.66.0",
-    "@tanstack/react-router": "1.120.20",
+    "@tanstack/react-router": "1.111.11",
     "@tanstack/react-virtual": "^3.13.0",
-    "@tanstack/router-generator": "1.120.20",
-    "@tanstack/router-plugin": "1.120.20",
-    "@tanstack/start": "1.120.20",
+    "@tanstack/router-generator": "1.111.11",
+    "@tanstack/router-plugin": "1.111.11",
+    "@tanstack/start": "1.111.11",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.1",
@@ -51,18 +52,17 @@
     "drizzle-kit": "^0.31.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.19.0",
     "typescript": "^5.7.3",
     "vite": "^6.0.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "pnpm": {
     "overrides": {
-      "@tanstack/router-generator": "1.120.20",
-      "@tanstack/router-plugin": "1.120.20",
-      "@tanstack/react-router": "1.120.20",
-      "@tanstack/react-start-plugin": "1.120.17",
-      "@tanstack/start-plugin-core": "1.120.17",
-      "@tanstack/server-functions-plugin": "1.120.17"
+      "@tanstack/router-generator": "1.111.11",
+      "@tanstack/router-plugin": "1.111.11",
+      "@tanstack/react-router": "1.111.11",
+      "@tanstack/start": "1.111.11"
     }
   },
   "packageManager": "pnpm@10.28.2"
