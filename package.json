@@ -61,6 +61,11 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "argon2",
+      "esbuild",
+      "@parcel/watcher"
+    ],
     "overrides": {
       "@tanstack/router-generator": "1.120.17",
       "@tanstack/router-plugin": "1.120.17",
