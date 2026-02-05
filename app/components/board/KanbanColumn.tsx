@@ -293,7 +293,7 @@ export function KanbanColumn({
           setNodeRef(node);
           (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
-        className="flex-1 min-h-0 overflow-auto p-2"
+        className="flex-1 min-h-0 overflow-y-auto p-2"
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <div
@@ -315,10 +315,11 @@ export function KanbanColumn({
                     top: 0,
                     left: 0,
                     width: "100%",
-                    height: `${virtualItem.size}px`,
+                    // Don't set fixed height - let card size naturally
+                    // Gap is baked into estimateSize so positions account for it
                     transform: `translateY(${virtualItem.start}px)`,
+                    paddingBottom: `${CARD_GAP}px`,
                   }}
-                  className="pb-2"
                 >
                   <DraggableTaskCard task={task} onClick={onTaskClick} />
                 </div>
@@ -382,7 +383,7 @@ export function SimpleKanbanColumn({
         />
       </div>
 
-      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-auto p-2 space-y-2">
+      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
