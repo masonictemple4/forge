@@ -16,9 +16,8 @@ import type { Column, Task } from "./types";
 // Must be large enough to accommodate the largest card + gap
 // Cards can be 60-130px depending on content, so use 140px to be safe
 const CARD_HEIGHT = 130; // Max card content height
-const CARD_GAP = 10; // Gap between cards (pb-2.5 = 10px)
+const CARD_GAP = 10; // Gap between cards
 const CARD_HEIGHT_ESTIMATE = CARD_HEIGHT + CARD_GAP; // 140px total
-const GAP = 8; // Gap between cards
 
 /**
  * Virtualized sortable item that combines TanStack Virtual positioning with dnd-kit
@@ -67,6 +66,8 @@ function VirtualizedSortableItem({ task, virtualStart, onClick }: VirtualizedSor
     top: 0,
     left: 0,
     width: "100%",
+    maxHeight: CARD_HEIGHT,
+    overflow: "hidden",
     transform: combinedTransform,
     transition: customTransition,
     opacity: isDragging ? 0 : 1,
