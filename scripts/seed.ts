@@ -9,6 +9,7 @@
  * Usage: pnpm db:seed
  */
 
+import 'dotenv/config';
 import { db, tasks, dependencies, type TaskStatus } from "../db";
 // Simple inline rank generation (avoids module resolution issues)
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
