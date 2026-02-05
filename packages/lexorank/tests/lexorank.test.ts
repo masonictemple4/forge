@@ -261,13 +261,14 @@ describe('isValid', () => {
     expect(isValid('ABCDEFGHIJKLMNOPQRSTUVWXYZ')).toBe(true);
     expect(isValid('abcdefghijklmnopqrstuvwxyz')).toBe(true);
     expect(isValid('aA0zZ9')).toBe(true);
+    expect(isValid('-./0_')).toBe(true); // Extended charset chars
   });
 
   it('rejects invalid characters', () => {
     expect(isValid('!')).toBe(false);
     expect(isValid(' ')).toBe(false);
-    expect(isValid('a-b')).toBe(false);
-    expect(isValid('hello_world')).toBe(false);
+    expect(isValid('@')).toBe(false);
+    expect(isValid('hello#world')).toBe(false);
   });
 });
 

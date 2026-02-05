@@ -87,47 +87,59 @@ export function between(a: string, b: string): string {
  * Assumes a < b.
  */
 function midpoint(a: string, b: string): string {
-  // Pad to same length for easier comparison
-  const maxLen = Math.max(a.length, b.length);
-  
-  // Find first differing position
+  let result = '';
   let pos = 0;
-  while (pos < maxLen) {
-    const aIdx = pos < a.length ? charIndex(a[pos]) : 0;
-    const bIdx = pos < b.length ? charIndex(b[pos]) : BASE - 1;
-    
-    if (aIdx !== bIdx) {
-      // Found difference
-      if (bIdx - aIdx > 1) {
-        // Room between - take midpoint
-        const midIdx = Math.floor((aIdx + bIdx) / 2);
-        return a.slice(0, pos) + indexChar(midIdx);
-      }
-      
-      // Adjacent characters - need to go deeper
-      // Take the lower char and find space in next position
-      const prefix = a.slice(0, pos) + indexChar(aIdx);
-      
-      // Get the suffix starting positions
-      const aSuffix = pos + 1 < a.length ? charIndex(a[pos + 1]) : 0;
-      const bSuffix = BASE - 1; // Since we're taking aIdx, we have full range above aSuffix
-      
-      if (bSuffix - aSuffix > 1) {
-        const midSuffix = Math.floor((aSuffix + bSuffix) / 2);
-        return prefix + indexChar(midSuffix);
-      }
-      
-      // Still adjacent, recurse deeper
-      const aRest = pos + 1 < a.length ? a.slice(pos + 1) : FIRST_CHAR;
-      const bRest = LAST_CHAR;
-      
-      return prefix + midpoint(aRest, bRest);
-    }
-    pos++;
-  }
   
-  // Strings are equal (shouldn't happen if a < b)
-  throw new Error(`Cannot find midpoint: strings are equal`);
+  while (true) {
+    // Get character indices, treating missing chars appropriately
+    // For 'a', missing chars are minimum (extending right)
+    // For 'b', missing chars are maximum (but b is shorter means a is prefix of b)
+    const aIdx = pos < a.length ? charIndex(a[pos]) : 0;
+    const bIdx = pos < b.length ? charIndex(b[pos]) : BASE;
+    
+    if (bIdx - aIdx > 1) {
+      // Room between these characters - take midpoint and we're done
+      const midIdx = Math.floor((aIdx + bIdx) / 2);
+      return result + indexChar(midIdx);
+    }
+    
+    if (aIdx === bIdx) {
+      // Same character, include it and continue
+      result += indexChar(aIdx);
+      pos++;
+      continue;
+    }
+    
+    // Adjacent characters (bIdx - aIdx === 1)
+    // Include the lower character (aIdx) and continue looking for space
+    result += indexChar(aIdx);
+    pos++;
+    
+    // Now we need to find space between a's suffix and maximum
+    // Since we committed to aIdx, anything above a's next chars works
+    // (as long as it's less than bIdx + MIN which is the start of b's territory)
+    
+    while (true) {
+      const aNext = pos < a.length ? charIndex(a[pos]) : 0;
+      const bNext = BASE - 1; // We have full range since we took the lower char
+      
+      if (bNext - aNext > 1) {
+        // Found room
+        const midNext = Math.floor((aNext + bNext) / 2);
+        return result + indexChar(midNext);
+      }
+      
+      // Still no room, include aNext and continue
+      result += indexChar(aNext);
+      pos++;
+      
+      // Safety check to prevent infinite loops
+      if (pos > MAX_LENGTH + 10) {
+        // Fallback: just append midpoint
+        return result + MID_CHAR;
+      }
+    }
+  }
 }
 
 /**

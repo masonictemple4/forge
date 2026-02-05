@@ -15,9 +15,10 @@
   "dependencies": {
     "@hono/zod-validator": "^0.4.2",
     "@tanstack/react-query": "^5.66.0",
-    "@tanstack/react-router": "^1.114.3",
+    "@tanstack/react-router": "^1.120.20",
     "@tanstack/react-virtual": "^3.13.0",
-    "@tanstack/start": "^1.114.3",
+    "@tanstack/router-generator": "^1.120.20",
+    "@tanstack/start": "^1.120.20",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.7.2",
     "postgres": "^3.4.5",
