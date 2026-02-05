@@ -5,10 +5,14 @@ import {
   after,
   before,
   initialBatch,
+  betweenBatch,
   needsRebalancing,
   rebalance,
   isValid,
   compare,
+  createComparator,
+  getCharset,
+  getMaxLength,
 } from '../src/lexorank.js';
 
 describe('initial', () => {
@@ -377,5 +381,84 @@ describe('stress test', () => {
     console.log(`  Total items: ${ranks.length}`);
     console.log(`  Longest rank: ${Math.max(...ranks.map(r => r.length))}`);
     console.log(`  Shortest rank: ${Math.min(...ranks.map(r => r.length))}`);
+  });
+});
+
+describe('betweenBatch', () => {
+  it('returns empty array for count <= 0', () => {
+    expect(betweenBatch('A', 'Z', 0)).toEqual([]);
+    expect(betweenBatch('A', 'Z', -1)).toEqual([]);
+  });
+
+  it('returns single element for count = 1', () => {
+    const ranks = betweenBatch('A', 'Z', 1);
+    expect(ranks.length).toBe(1);
+    expect(ranks[0] > 'A').toBe(true);
+    expect(ranks[0] < 'Z').toBe(true);
+  });
+
+  it('returns multiple sorted ranks', () => {
+    const ranks = betweenBatch('A', 'Z', 5);
+    expect(ranks.length).toBe(5);
+    
+    // All should be valid
+    for (const rank of ranks) {
+      expect(isValid(rank)).toBe(true);
+    }
+    
+    // All should be between A and Z
+    for (const rank of ranks) {
+      expect(rank > 'A').toBe(true);
+      expect(rank < 'Z').toBe(true);
+    }
+    
+    // Should be sorted
+    for (let i = 1; i < ranks.length; i++) {
+      expect(ranks[i] > ranks[i - 1]).toBe(true);
+    }
+  });
+
+  it('works with empty bounds', () => {
+    const ranks = betweenBatch('', 'Z', 3);
+    expect(ranks.length).toBe(3);
+    for (const rank of ranks) {
+      expect(rank < 'Z').toBe(true);
+    }
+  });
+});
+
+describe('createComparator', () => {
+  it('sorts objects by rank', () => {
+    const items = [
+      { id: 1, rank: 'Z' },
+      { id: 2, rank: 'A' },
+      { id: 3, rank: 'M' },
+    ];
+    
+    items.sort(createComparator(item => item.rank));
+    
+    expect(items[0].id).toBe(2); // A
+    expect(items[1].id).toBe(3); // M
+    expect(items[2].id).toBe(1); // Z
+  });
+});
+
+describe('getCharset', () => {
+  it('returns a non-empty string', () => {
+    const charset = getCharset();
+    expect(charset.length).toBeGreaterThan(0);
+  });
+
+  it('is sorted', () => {
+    const charset = getCharset();
+    for (let i = 1; i < charset.length; i++) {
+      expect(charset[i] > charset[i - 1]).toBe(true);
+    }
+  });
+});
+
+describe('getMaxLength', () => {
+  it('returns a positive number', () => {
+    expect(getMaxLength()).toBeGreaterThan(0);
   });
 });

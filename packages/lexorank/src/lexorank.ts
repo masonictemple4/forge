@@ -310,3 +310,65 @@ export function compare(a: string, b: string): number {
   if (a > b) return 1;
   return 0;
 }
+
+/**
+ * Generate N evenly-spaced ranks between two existing ranks.
+ * Useful for inserting multiple items at once.
+ * 
+ * @param a - Lower bound (empty string for beginning)
+ * @param b - Upper bound (empty string for end)
+ * @param count - Number of ranks to generate
+ * @returns Array of ranks that sort between a and b
+ */
+export function betweenBatch(a: string, b: string, count: number): string[] {
+  if (count <= 0) return [];
+  if (count === 1) return [between(a, b)];
+  
+  const ranks: string[] = [];
+  let prev = a;
+  
+  // Generate ranks one at a time, always taking the upper half
+  // This distributes space more evenly
+  for (let i = 0; i < count; i++) {
+    const remaining = count - i;
+    // Divide remaining space
+    if (remaining === 1) {
+      ranks.push(between(prev, b));
+    } else {
+      const mid = between(prev, b);
+      ranks.push(mid);
+      prev = mid;
+    }
+  }
+  
+  return ranks;
+}
+
+/**
+ * Create a sort comparator function for use with Array.sort().
+ * 
+ * @example
+ * ```typescript
+ * const items = [{ rank: 'B' }, { rank: 'A' }];
+ * items.sort(createComparator(item => item.rank));
+ * // [{ rank: 'A' }, { rank: 'B' }]
+ * ```
+ */
+export function createComparator<T>(getRank: (item: T) => string): (a: T, b: T) => number {
+  return (a, b) => compare(getRank(a), getRank(b));
+}
+
+/**
+ * Get the character set used for ranking.
+ * Useful for understanding valid characters.
+ */
+export function getCharset(): string {
+  return CHARS;
+}
+
+/**
+ * Get the recommended maximum rank length before rebalancing.
+ */
+export function getMaxLength(): number {
+  return MAX_LENGTH;
+}

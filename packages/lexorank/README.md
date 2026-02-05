@@ -92,19 +92,37 @@ Check if a rank has grown too long (> 50 characters).
 ### `rebalance(ranks: string[]): string[]`
 Generate new, shorter ranks for a list. Returns evenly-spaced values.
 
+### `betweenBatch(a: string, b: string, count: number): string[]`
+Generate N evenly-spaced ranks between two bounds. Useful for bulk insertions.
+
 ### `isValid(rank: string): boolean`
-Check if a string contains only valid rank characters (0-9, A-Z, a-z).
+Check if a string contains only valid rank characters.
 
 ### `compare(a: string, b: string): number`
 Compare two ranks. Returns negative if a < b, positive if a > b, zero if equal.
 
+### `createComparator<T>(getRank: (item: T) => string): (a: T, b: T) => number`
+Create a sort comparator function for use with `Array.sort()`.
+
+```typescript
+const tasks = [{ rank: 'Z' }, { rank: 'A' }];
+tasks.sort(createComparator(t => t.rank));
+// [{ rank: 'A' }, { rank: 'Z' }]
+```
+
+### `getCharset(): string`
+Get the character set used for ranking.
+
+### `getMaxLength(): number`
+Get the recommended maximum rank length before rebalancing.
+
 ## Character Set
 
-Uses base-62: `0-9`, `A-Z`, `a-z`. This provides:
+Uses an extended base-66 set: `-`, `.`, `/`, `0-9`, `A-Z`, `_`, `a-z`. This provides:
 - URL-safe strings
 - Case-sensitive sorting
-- High density (62 options per character)
-- No special characters
+- High density (66 options per character)
+- Headroom below `0` for edge cases
 
 ## Why Not Use Numbers?
 

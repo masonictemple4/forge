@@ -28,8 +28,12 @@ export {
   after,
   before,
   initialBatch,
+  betweenBatch,
   needsRebalancing,
   rebalance,
   isValid,
   compare,
+  createComparator,
+  getCharset,
+  getMaxLength,
 } from './lexorank.js';
