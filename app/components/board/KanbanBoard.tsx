@@ -311,7 +311,7 @@ export function KanbanBoard({
     >
       <div
         ref={parentRef}
-        className="flex h-full w-full overflow-auto bg-background p-4"
+        className="flex h-full min-h-0 w-full overflow-auto bg-background p-4"
         style={{
           // Enable horizontal scrolling
           overflowX: "auto",

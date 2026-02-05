@@ -289,7 +289,7 @@ export function KanbanColumn({
           setNodeRef(node);
           (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
-        className="flex-1 overflow-auto p-2"
+        className="flex-1 min-h-0 overflow-auto p-2"
         style={{
           // Ensure scrolling works properly
           contain: "strict",
@@ -380,7 +380,7 @@ export function SimpleKanbanColumn({
         dragHandleProps={dragHandleProps}
       />
 
-      <div ref={setNodeRef} className="flex-1 overflow-auto p-2 space-y-2">
+      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-auto p-2 space-y-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />

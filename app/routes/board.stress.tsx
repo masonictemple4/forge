@@ -77,7 +77,7 @@ function StressTestPage() {
       </header>
 
       {/* Board */}
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden">
         <KanbanBoard columns={initialColumns} onTaskMove={handleTaskMove} />
       </main>
 

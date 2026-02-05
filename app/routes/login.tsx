@@ -50,7 +50,7 @@ function LoginPage() {
     <div className="min-h-screen bg-background text-foreground font-sans">
       <Header showLoginButton={false} />
 
-      <main className="container flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-12">
+      <main className="container mx-auto flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 py-12">
         <div className="w-full max-w-md space-y-8">
           {/* Logo & Title */}
           <div className="flex flex-col items-center space-y-4 text-center">

@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './routes/__root'
+import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
 import { Route as BoardImport } from './routes/board'
 import { Route as IndexImport } from './routes/index'
@@ -18,6 +19,12 @@ import { Route as BoardStressImport } from './routes/board.stress'
 import { Route as BoardApiImport } from './routes/board.api'
 
 // Create/Update Routes
+
+const RegisterRoute = RegisterImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const LoginRoute = LoginImport.update({
   id: '/login',
@@ -74,6 +81,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterImport
+      parentRoute: typeof rootRoute
+    }
     '/board/api': {
       id: '/board/api'
       path: '/api'
@@ -109,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
@@ -117,6 +132,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
@@ -126,16 +142,30 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/board': typeof BoardRouteWithChildren
   '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
   '/board/api': typeof BoardApiRoute
   '/board/stress': typeof BoardStressRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/board' | '/login' | '/board/api' | '/board/stress'
+  fullPaths:
+    | '/'
+    | '/board'
+    | '/login'
+    | '/register'
+    | '/board/api'
+    | '/board/stress'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/board' | '/login' | '/board/api' | '/board/stress'
-  id: '__root__' | '/' | '/board' | '/login' | '/board/api' | '/board/stress'
+  to: '/' | '/board' | '/login' | '/register' | '/board/api' | '/board/stress'
+  id:
+    | '__root__'
+    | '/'
+    | '/board'
+    | '/login'
+    | '/register'
+    | '/board/api'
+    | '/board/stress'
   fileRoutesById: FileRoutesById
 }
 
@@ -143,12 +173,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BoardRoute: typeof BoardRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BoardRoute: BoardRouteWithChildren,
   LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
 }
 
 export const routeTree = rootRoute
@@ -163,7 +195,8 @@ export const routeTree = rootRoute
       "children": [
         "/",
         "/board",
-        "/login"
+        "/login",
+        "/register"
       ]
     },
     "/": {
@@ -178,6 +211,9 @@ export const routeTree = rootRoute
     },
     "/login": {
       "filePath": "login.tsx"
+    },
+    "/register": {
+      "filePath": "register.tsx"
     },
     "/board/api": {
       "filePath": "board.api.tsx",

@@ -6,23 +6,25 @@
  * - Optimistic updates for instant responsiveness
  * - Error handling with toast notifications
  * - Column reordering and renaming
+ * - Task CRUD operations (create, read, update, delete)
  * - Automatic cache management
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { KanbanBoard } from "./KanbanBoard";
 import { useToast } from "~/components/ui/toast";
 import {
   useBoard,
   useMoveTask,
   useCreateTask,
+  useUpdateTask,
   useDeleteTask,
-  useUpdateColumn,
-  useReorderColumn,
   type Task as ApiTask,
   type TaskStatus,
 } from "~/lib/query";
 import type { Column, Task } from "./types";
+import { TaskDetailDialog } from "./TaskDetailDialog";
+import { TaskFormDialog, type TaskFormData } from "./TaskFormDialog";
 
 interface KanbanBoardConnectedProps {
   boardId?: string;
@@ -65,9 +67,16 @@ function transformColumns(
 export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnectedProps) {
   const { data: board, isLoading, error } = useBoard(boardId);
   const moveTaskMutation = useMoveTask();
-  const updateColumnMutation = useUpdateColumn();
-  const reorderColumnMutation = useReorderColumn();
+  const createTaskMutation = useCreateTask();
+  const updateTaskMutation = useUpdateTask();
+  const deleteTaskMutation = useDeleteTask();
   const toast = useToast();
+
+  // Dialog states
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createColumnId, setCreateColumnId] = useState<string>("backlog");
 
   // Transform data for board component
   const columns = useMemo(() => {
@@ -127,55 +136,114 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
     [columns, moveTaskMutation, toast]
   );
 
-  // Handle column reorder
+  // Handle column reorder (columns are status-based, so this is informational only)
   const handleColumnReorder = useCallback(
     (columnId: string, beforeId: string | null, afterId: string | null) => {
-      reorderColumnMutation.mutate(
-        {
-          columnId,
-          beforeId,
-          afterId,
-        },
-        {
-          onError: (err) => {
-            toast.error(
-              "Failed to reorder column",
-              err instanceof Error ? err.message : "Please try again"
-            );
-          },
-        }
-      );
+      // For status-based columns, we don't persist reordering to backend
+      // This could be extended to support custom column orders in the future
+      console.log("Column reorder:", { columnId, beforeId, afterId });
     },
-    [reorderColumnMutation, toast]
+    []
   );
 
-  // Handle column rename with optimistic update
+  // Handle column rename (columns are status-based, so this is informational only)
   const handleColumnRename = useCallback(
     (columnId: string, newTitle: string) => {
-      updateColumnMutation.mutate(
-        {
-          id: columnId,
-          title: newTitle,
-        },
-        {
-          onError: (err) => {
-            toast.error(
-              "Failed to rename column",
-              err instanceof Error ? err.message : "Please try again"
-            );
-          },
-        }
-      );
+      // For status-based columns, we don't persist renaming to backend
+      // This could be extended to support custom column names in the future
+      console.log("Column rename:", { columnId, newTitle });
+      toast.info("Column renamed", "Note: Column names are not persisted for status-based boards");
     },
-    [updateColumnMutation, toast]
+    [toast]
   );
 
   // Handle column changes (for local state sync)
   const handleColumnsChange = useCallback((newColumns: Column[]) => {
     // Local state is managed by KanbanBoard
-    // API sync is handled by individual handlers
     console.log("Columns changed:", newColumns.map(c => c.title).join(", "));
   }, []);
+
+  // Handle task click - open detail dialog
+  const handleTaskClick = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setShowDetailDialog(true);
+  }, []);
+
+  // Handle add task button click
+  const handleAddTask = useCallback((columnId: string) => {
+    setCreateColumnId(columnId);
+    setShowCreateDialog(true);
+  }, []);
+
+  // Handle create task
+  const handleCreateTask = useCallback(
+    (data: TaskFormData) => {
+      createTaskMutation.mutate(
+        {
+          title: data.title,
+          description: data.description,
+          status: (data.status as TaskStatus) ?? "backlog",
+        },
+        {
+          onSuccess: () => {
+            toast.success("Task created", "Your new task has been added to the board");
+            setShowCreateDialog(false);
+          },
+          onError: (err) => {
+            toast.error(
+              "Failed to create task",
+              err instanceof Error ? err.message : "Please try again"
+            );
+          },
+        }
+      );
+    },
+    [createTaskMutation, toast]
+  );
+
+  // Handle edit task
+  const handleEditTask = useCallback(
+    (task: Task, data: TaskFormData) => {
+      updateTaskMutation.mutate(
+        {
+          id: String(task.id),
+          title: data.title,
+          description: data.description,
+          status: data.status as TaskStatus,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Task updated", "Your changes have been saved");
+          },
+          onError: (err) => {
+            toast.error(
+              "Failed to update task",
+              err instanceof Error ? err.message : "Please try again"
+            );
+          },
+        }
+      );
+    },
+    [updateTaskMutation, toast]
+  );
+
+  // Handle delete task
+  const handleDeleteTask = useCallback(
+    (task: Task) => {
+      deleteTaskMutation.mutate(String(task.id), {
+        onSuccess: () => {
+          toast.success("Task deleted", "The task has been removed from the board");
+        },
+        onError: (err) => {
+          toast.error(
+            "Failed to delete task",
+            err instanceof Error ? err.message : "Please try again"
+          );
+        },
+      });
+    },
+    [deleteTaskMutation, toast]
+  );
 
   // Loading state
   if (isLoading) {
@@ -204,13 +272,37 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
   }
 
   return (
-    <KanbanBoard
-      columns={columns}
-      onColumnsChange={handleColumnsChange}
-      onTaskMove={handleTaskMove}
-      onColumnReorder={handleColumnReorder}
-      onColumnRename={handleColumnRename}
-    />
+    <>
+      <KanbanBoard
+        columns={columns}
+        onColumnsChange={handleColumnsChange}
+        onTaskMove={handleTaskMove}
+        onColumnReorder={handleColumnReorder}
+        onColumnRename={handleColumnRename}
+        onAddTask={handleAddTask}
+        onTaskClick={handleTaskClick}
+      />
+
+      {/* Task Detail Dialog */}
+      <TaskDetailDialog
+        task={selectedTask}
+        open={showDetailDialog}
+        onOpenChange={setShowDetailDialog}
+        onEdit={handleEditTask}
+        onDelete={handleDeleteTask}
+        isEditLoading={updateTaskMutation.isPending}
+        isDeleteLoading={deleteTaskMutation.isPending}
+      />
+
+      {/* Create Task Dialog */}
+      <TaskFormDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onSubmit={handleCreateTask}
+        defaultStatus={createColumnId}
+        isLoading={createTaskMutation.isPending}
+      />
+    </>
   );
 }
 

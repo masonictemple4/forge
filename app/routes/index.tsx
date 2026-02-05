@@ -17,7 +17,7 @@ function LandingPage() {
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-muted/50 via-background to-muted/30" />
         
-        <div className="container relative px-4 md:px-6 py-24 md:py-32 lg:py-40">
+        <div className="container mx-auto relative px-4 md:px-6 py-24 md:py-32 lg:py-40">
           <div className="flex flex-col items-center text-center space-y-8">
             {/* Logo */}
             <div className="relative">
@@ -66,7 +66,7 @@ function LandingPage() {
 
       {/* Features Section */}
       <section className="py-24 md:py-32 bg-muted/30">
-        <div className="container px-4 md:px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
               Built Different
@@ -113,7 +113,7 @@ function LandingPage() {
 
       {/* Demo Links Section */}
       <section className="py-24 md:py-32">
-        <div className="container px-4 md:px-6">
+        <div className="container mx-auto px-4 md:px-6">
           <div className="text-center space-y-4 mb-16">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl">
               See It In Action
@@ -149,7 +149,7 @@ function LandingPage() {
 
       {/* Footer CTA */}
       <section className="py-24 md:py-32 bg-primary text-primary-foreground">
-        <div className="container px-4 md:px-6 text-center space-y-8">
+        <div className="container mx-auto px-4 md:px-6 text-center space-y-8">
           <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
             Ready to forge ahead?
           </h2>
@@ -170,7 +170,7 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="py-8 border-t">
-        <div className="container px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-4 md:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <ForgeLogo className="h-5 w-5" />
             <span className="font-semibold">Forge</span>
