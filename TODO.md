@@ -13,15 +13,6 @@
 - [x] Add Makefile for common commands (setup, dev, seed, clean)
 - [x] Verify all pnpm workspace packages link correctly
 
-## 🎨 Branding
-- [x] Logo v1 - Square & compass with all-seeing eye (rejected)
-- [x] Logo v2 - Minimalist geometric (selected for refinement)
-- [x] Logo v3 - Bold industrial anvil/hammer
-- [x] Logo v4 - Abstract tech/data flow
-- [ ] Logo v2 refined - Adding subtle Masonic symbolism (in progress)
-- [ ] Create favicon versions for selected logo
-- [ ] Add logo to app header
-
 ## ✅ Completed
 - [x] TanStack Start + Hono + Drizzle scaffolding
 - [x] LexoRank package (O(1) reordering) - 48 tests
@@ -33,6 +24,7 @@
 - [x] Hono API routes (tasks, boards, dependencies)
 - [x] Toast notifications
 - [x] Status color scheme (todo/in-progress/done/blocked)
+- [x] Logo design
 
 ## 🚀 Future Enhancements
 - [ ] User authentication
