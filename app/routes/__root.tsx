@@ -8,7 +8,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { getQueryClient } from "~/lib/query/client";
 import { ToastProvider } from "~/components/ui/toast";
-import "~/styles.css";
+import appStyles from "~/styles.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -16,6 +16,9 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Forge 🔥 - Project Management" },
+    ],
+    links: [
+      { rel: "stylesheet", href: appStyles },
     ],
   }),
   component: RootComponent,
