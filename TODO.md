@@ -1,19 +1,32 @@
 # Forge - Project TODO
 
-## 🚨 Blockers (Must Fix Before Use)
-- [x] Fix TanStack Start version compatibility issue (SSR exports) - Pinned to 1.120.17
-- [x] Verify dev server runs cleanly (`pnpm dev`) ✅
-
-## 🔧 Setup & Configuration
-- [x] Create `.env.example` with all required variables
-- [x] Document PostgreSQL setup requirements
-- [x] Add database seeding script for demo data (25 tasks, 5 columns, dependencies)
-- [x] Create Docker Compose for local Postgres
-- [x] Add setup instructions to README
-- [x] Add Makefile for common commands (setup, dev, seed, clean)
-- [x] Verify all pnpm workspace packages link correctly
+## 🚨 In Progress
+- [ ] Migrate from @tanstack/start to @tanstack/react-start (deprecation warning)
+- [ ] Add notFoundComponent to router config
+- [ ] Task detail view (click to open modal/drawer)
+- [ ] Add new tasks (UI + API)
+- [ ] Edit tasks (inline or modal)
+- [ ] Delete tasks (with confirmation)
+- [ ] Reorder columns (drag & drop)
+- [ ] Rename columns (inline edit)
+- [ ] Fix cross-column drag animation (match in-column animation)
+- [ ] Landing page (marketing/hero)
+- [ ] Login page
+- [ ] Auth: GitHub OAuth (self-implemented)
+- [ ] Auth: Google OAuth (self-implemented)
+- [ ] Auth: Apple OAuth (self-implemented)
+- [ ] User sessions & JWT handling
 
 ## ✅ Completed
+- [x] Fix TanStack Start version compatibility issue - Pinned to 1.120.17
+- [x] Verify dev server runs cleanly (`pnpm dev`)
+- [x] Create `.env.example` with all required variables
+- [x] Document PostgreSQL setup requirements
+- [x] Add database seeding script for demo data
+- [x] Create Docker Compose for local Postgres
+- [x] Add setup instructions to README
+- [x] Add Makefile for common commands
+- [x] Verify all pnpm workspace packages link correctly
 - [x] TanStack Start + Hono + Drizzle scaffolding
 - [x] LexoRank package (O(1) reordering) - 48 tests
 - [x] DAG package (dependency management) - 45 tests
@@ -23,11 +36,11 @@
 - [x] TanStack Query setup + optimistic updates
 - [x] Hono API routes (tasks, boards, dependencies)
 - [x] Toast notifications
-- [x] Status color scheme (todo/in-progress/done/blocked)
+- [x] Status color scheme
 - [x] Logo design
+- [x] Add dotenv for env loading
 
 ## 🚀 Future Enhancements
-- [ ] User authentication
 - [ ] Real-time collaboration (WebSockets/SSE)
 - [ ] Full-text search (PostgreSQL tsvector)
 - [ ] Board/project management CRUD
@@ -41,5 +54,4 @@
 - **Repo:** https://github.com/masonictemple4/forge
 - **Stress test route:** `/board/stress` (4,000 tasks)
 - **Demo board:** `/board`
-- **Status colors:** blue (todo), amber (in-progress), green (done), red (blocked)
 - **Quick start:** `make setup && make seed && make dev`
