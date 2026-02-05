@@ -24,10 +24,9 @@ export function TaskCard({ task, isDragging, isOverlay }: TaskCardProps) {
   return (
     <Card
       className={cn(
-        "cursor-grab border-l-4 transition-all hover:shadow-md",
+        "cursor-grab border-l-4 transition-shadow hover:shadow-md",
         task.priority ? priorityColors[task.priority] : "border-l-transparent",
-        isDragging && "opacity-50 rotate-2",
-        isOverlay && "shadow-xl rotate-2 scale-105",
+        isOverlay && "shadow-xl rotate-2 scale-105 cursor-grabbing",
         hasBlockers && "opacity-75 bg-status-blocked/10"
       )}
     >
@@ -84,8 +83,13 @@ export function TaskCard({ task, isDragging, isOverlay }: TaskCardProps) {
   );
 }
 
+// Consistent animation timing for all sortable items
+const ANIMATION_DURATION = 200;
+const ANIMATION_EASING = "cubic-bezier(0.25, 0.1, 0.25, 1)";
+
 /**
  * Draggable wrapper for TaskCard with dnd-kit
+ * Uses consistent animation for both in-column and cross-column moves
  */
 export function DraggableTaskCard({ task }: { task: Task }) {
   const {
@@ -95,17 +99,28 @@ export function DraggableTaskCard({ task }: { task: Task }) {
     transform,
     transition,
     isDragging,
+    isSorting,
   } = useSortable({
     id: `task-${task.id}`,
     data: {
       type: "task",
       task,
     },
+    // Consistent animation config
+    animateLayoutChanges: () => true,
   });
+
+  // Use consistent transition timing for all moves (in-column and cross-column)
+  // Only apply transition when actually sorting/moving, not during initial drag
+  const customTransition = isSorting || transition
+    ? `transform ${ANIMATION_DURATION}ms ${ANIMATION_EASING}`
+    : undefined;
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: customTransition,
+    // Hide original item during drag (DragOverlay shows the preview)
+    opacity: isDragging ? 0 : 1,
   };
 
   return (

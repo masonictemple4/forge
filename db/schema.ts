@@ -17,9 +17,97 @@ const tsvector = customType<{ data: string }>({
   },
 });
 
+// OAuth provider enum values
+export const oauthProviders = ["github", "google", "apple"] as const;
+export type OAuthProvider = (typeof oauthProviders)[number];
+
 // Task status enum values
 export const taskStatuses = ["backlog", "todo", "in_progress", "review", "done"] as const;
 export type TaskStatus = (typeof taskStatuses)[number];
+
+/**
+ * Users Table
+ * 
+ * OAuth-authenticated users with:
+ * - Provider-specific ID for linking accounts
+ * - Profile information from OAuth provider
+ */
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    
+    // Profile
+    email: varchar("email", { length: 255 }).notNull(),
+    name: varchar("name", { length: 255 }),
+    avatarUrl: text("avatar_url"),
+    
+    // OAuth provider info
+    provider: varchar("provider", { length: 20 }).notNull(), // github, google, apple
+    providerId: varchar("provider_id", { length: 255 }).notNull(), // ID from provider
+    
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Unique constraint: one account per provider+providerId combo
+    index("users_provider_provider_id_idx").on(table.provider, table.providerId),
+    // Index for email lookups
+    index("users_email_idx").on(table.email),
+  ]
+);
+
+/**
+ * Sessions Table
+ * 
+ * User sessions with JWT tokens
+ */
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    
+    // User reference
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    
+    // JWT token (hashed for security in production, raw here for simplicity)
+    token: text("token").notNull().unique(),
+    
+    // Expiration
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // Index for token lookups
+    index("sessions_token_idx").on(table.token),
+    // Index for user's sessions
+    index("sessions_user_id_idx").on(table.userId),
+    // Index for cleanup of expired sessions
+    index("sessions_expires_at_idx").on(table.expiresAt),
+  ]
+);
+
+// Relations for users and sessions
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+}));
+
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Type exports for users and sessions
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+export type Session = typeof sessions.$inferSelect;
+export type NewSession = typeof sessions.$inferInsert;
 
 /**
  * Tasks Table
@@ -121,8 +209,42 @@ export const dependenciesRelations = relations(dependencies, ({ one }) => ({
   }),
 }));
 
+/**
+ * Columns Table
+ * 
+ * Custom kanban columns with:
+ * - LexoRank for O(1) reordering
+ * - Color and display customization
+ * - Optional WIP limits
+ */
+export const columns = pgTable(
+  "columns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    
+    // Display
+    title: varchar("title", { length: 255 }).notNull(),
+    color: varchar("color", { length: 20 }),
+    
+    // LexoRank for ordering
+    rank: varchar("rank", { length: 255 }).notNull(),
+    
+    // Optional WIP limit
+    wipLimit: varchar("wip_limit", { length: 10 }),
+    
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("columns_rank_idx").on(table.rank),
+  ]
+);
+
 // Type exports for use in API
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
 export type Dependency = typeof dependencies.$inferSelect;
 export type NewDependency = typeof dependencies.$inferInsert;
+export type Column = typeof columns.$inferSelect;
+export type NewColumn = typeof columns.$inferInsert;

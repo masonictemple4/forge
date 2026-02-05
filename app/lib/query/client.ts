@@ -65,4 +65,8 @@ export const queryKeys = {
   task: (id: string) => [...queryKeys.tasks(), id] as const,
   tasksByStatus: (status: string) => [...queryKeys.tasks(), "status", status] as const,
   taskSearch: (query: string) => [...queryKeys.tasks(), "search", query] as const,
+  
+  // Column queries
+  columns: () => [...queryKeys.all, "columns"] as const,
+  column: (id: string) => [...queryKeys.columns(), id] as const,
 } as const;
