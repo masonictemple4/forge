@@ -1,0 +1,28 @@
+{
+  "name": "@forge/dag",
+  "version": "1.0.0",
+  "description": "Directed Acyclic Graph for task dependency management",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "dag",
+    "directed-acyclic-graph",
+    "dependencies",
+    "topological-sort",
+    "cycle-detection"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.0"
+  }
+}
