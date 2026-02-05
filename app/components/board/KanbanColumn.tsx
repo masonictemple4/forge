@@ -12,10 +12,8 @@ import { Button } from "~/components/ui/button";
 import { DraggableTaskCard, TaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
-// Card height estimate for virtualizer - used as initial guess before measurement
-// Actual heights are measured dynamically via measureElement
-const CARD_HEIGHT_ESTIMATE = 100;
-const CARD_GAP = 8;
+// Card height estimate for virtualizer (fixed, no dynamic measurement)
+const CARD_HEIGHT_ESTIMATE = 108; // ~100px card + 8px margin
 
 interface KanbanColumnProps {
   column: Column;
@@ -254,17 +252,12 @@ export function KanbanColumn({
   });
 
   // Vertical virtualizer for cards within this column
-  // Uses dynamic measurement to handle variable card heights
+  // Uses fixed estimate size for simplicity - no dynamic measurement
   const virtualizer = useVirtualizer({
     count: tasks.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => CARD_HEIGHT_ESTIMATE,
     overscan: 5, // Render 5 extra items above/below viewport
-    // Measure actual element height + gap for accurate positioning
-    measureElement: (el) => {
-      if (!el) return CARD_HEIGHT_ESTIMATE;
-      return el.getBoundingClientRect().height + CARD_GAP;
-    },
   });
 
   const virtualItems = virtualizer.getVirtualItems();
@@ -300,7 +293,6 @@ export function KanbanColumn({
           (parentRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
         }}
         className="flex-1 min-h-0 overflow-y-auto p-2"
-        style={{ contain: "strict" }}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           <div
@@ -318,14 +310,12 @@ export function KanbanColumn({
                 <div
                   key={virtualItem.key}
                   data-index={virtualItem.index}
-                  ref={virtualizer.measureElement}
                   style={{
                     position: "absolute",
                     top: 0,
                     left: 0,
                     width: "100%",
                     transform: `translateY(${virtualItem.start}px)`,
-                    paddingBottom: `${CARD_GAP}px`,
                   }}
                 >
                   <DraggableTaskCard task={task} onClick={onTaskClick} />
