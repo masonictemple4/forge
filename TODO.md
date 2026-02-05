@@ -3,13 +3,14 @@
 ## 🚨 Blockers (Must Fix Before Use)
 - [ ] Fix TanStack Start version compatibility issue (SSR exports)
 - [ ] Verify dev server runs cleanly (`pnpm dev`)
-- [ ] Create `.env.example` with all required variables
-- [ ] Document PostgreSQL setup requirements
 
 ## 🔧 Setup & Configuration
-- [ ] Add database seeding script for demo data
-- [ ] Create Docker Compose for local Postgres
-- [ ] Add setup instructions to README
+- [x] Create `.env.example` with all required variables
+- [x] Document PostgreSQL setup requirements
+- [x] Add database seeding script for demo data
+- [x] Create Docker Compose for local Postgres
+- [x] Add setup instructions to README
+- [x] Add Makefile for common commands
 - [ ] Verify all pnpm workspace packages link correctly
 
 ## ✅ Completed
