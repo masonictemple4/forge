@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect, useLayoutEffect, forwardRef } from "react";
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -12,12 +12,9 @@ import { Button } from "~/components/ui/button";
 import { TaskCard, DraggableTaskCard } from "./TaskCard";
 import type { Column, Task } from "./types";
 
-// Card height estimate for virtualizer (fixed, no dynamic measurement)
-// Must be large enough to accommodate the largest card + gap
-// Cards can be 60-130px depending on content, so use 140px to be safe
-const CARD_HEIGHT = 130; // Max card content height
-const CARD_GAP = 10; // Gap between cards
-const CARD_HEIGHT_ESTIMATE = CARD_HEIGHT + CARD_GAP; // 140px total
+// Item size estimate for virtualizer. Real size is measured per item.
+const CARD_HEIGHT_ESTIMATE = 120;
+const CARD_GAP = 8;
 
 /**
  * Virtualized sortable item that combines TanStack Virtual positioning with dnd-kit
@@ -25,11 +22,19 @@ const CARD_HEIGHT_ESTIMATE = CARD_HEIGHT + CARD_GAP; // 140px total
  */
 interface VirtualizedSortableItemProps {
   task: Task;
+  virtualIndex: number;
   virtualStart: number;
+  onMeasure?: (node: HTMLDivElement | null) => void;
   onClick?: (task: Task) => void;
 }
 
-function VirtualizedSortableItem({ task, virtualStart, onClick }: VirtualizedSortableItemProps) {
+function VirtualizedSortableItem({
+  task,
+  virtualIndex,
+  virtualStart,
+  onMeasure,
+  onClick,
+}: VirtualizedSortableItemProps) {
   const {
     attributes,
     listeners,
@@ -66,10 +71,10 @@ function VirtualizedSortableItem({ task, virtualStart, onClick }: VirtualizedSor
     top: 0,
     left: 0,
     width: "100%",
-    maxHeight: CARD_HEIGHT,
-    overflow: "hidden",
     transform: combinedTransform,
     transition: customTransition,
+    boxSizing: "border-box",
+    paddingBottom: CARD_GAP,
     opacity: isDragging ? 0 : 1,
     zIndex: isDragging ? 1 : 0,
   };
@@ -81,7 +86,11 @@ function VirtualizedSortableItem({ task, virtualStart, onClick }: VirtualizedSor
 
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        onMeasure?.(node);
+      }}
+      data-index={virtualIndex}
       style={style}
       {...attributes}
       {...listeners}
@@ -333,9 +342,15 @@ export function KanbanColumn({
   const virtualizer = useVirtualizer({
     count: tasks.length,
     getScrollElement: () => scrollRef.current,
-    estimateSize: () => CARD_HEIGHT_ESTIMATE,
+    estimateSize: () => CARD_HEIGHT_ESTIMATE + CARD_GAP,
+    getItemKey: (index) => tasks[index]?.id ?? index,
     overscan: 5, // Render 5 extra items above/below viewport
   });
+
+  // Recompute measurements when task ordering/content changes.
+  useEffect(() => {
+    virtualizer.measure();
+  }, [tasks, virtualizer]);
 
   const virtualItems = virtualizer.getVirtualItems();
   const taskIds = tasks.map((task) => `task-${task.id}`);
@@ -374,7 +389,7 @@ export function KanbanColumn({
           {/* SSR/hydration: render first few items normally, then switch to virtualized after mount */}
           {!isMounted ? (
             // During SSR: render first ~5 items for initial paint
-            <div className="space-y-2">
+            <div className="flex flex-col" style={{ gap: CARD_GAP }}>
               {tasks.slice(0, 5).map((task) => (
                 <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
               ))}
@@ -401,7 +416,11 @@ export function KanbanColumn({
                   <VirtualizedSortableItem
                     key={task.id}
                     task={task}
+                    virtualIndex={virtualItem.index}
                     virtualStart={virtualItem.start}
+                    onMeasure={(node) => {
+                      if (node) virtualizer.measureElement(node);
+                    }}
                     onClick={onTaskClick}
                   />
                 );
