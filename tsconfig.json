@@ -15,7 +15,9 @@
     "paths": {
       "~/*": ["./app/*"],
       "@server/*": ["./server/*"],
-      "@db/*": ["./db/*"]
+      "@db/*": ["./db/*"],
+      "@forge/lexorank": ["./packages/lexorank/src/index.ts"],
+      "@forge/dag": ["./packages/dag/src/index.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],
