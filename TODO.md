@@ -8,8 +8,8 @@
 - [ ] Reorder columns (drag & drop)
 - [ ] Rename columns (inline edit)
 - [x] Fix cross-column drag animation (match in-column animation)
-- [ ] Landing page (marketing/hero)
-- [ ] Login page
+- [x] Landing page (marketing/hero) - Hero, features, CTAs, responsive design
+- [x] Login page - GitHub, Google, Apple OAuth buttons (UI only)
 - [ ] Auth: GitHub OAuth (self-implemented)
 - [ ] Auth: Google OAuth (self-implemented)
 - [ ] Auth: Apple OAuth (self-implemented)

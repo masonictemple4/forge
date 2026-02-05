@@ -20,6 +20,7 @@ import {
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 import { between, after, before } from "@forge/lexorank";
 
@@ -36,36 +37,19 @@ interface KanbanBoardProps {
     targetColumnId: string,
     newRank: string
   ) => void;
+  onAddTask?: (columnId: string) => void;
+  onTaskClick?: (task: Task) => void;
 }
 
 const COLUMN_WIDTH = 288 + 8; // 288px column + 8px gap
 const VIRTUALIZATION_THRESHOLD = 20; // Use virtualization when columns have > 20 tasks
 
-// Consistent drop animation for both in-column and cross-column moves
-const dropAnimationConfig: DropAnimation = {
-  sideEffects: ({ active, dragOverlay }) => {
-    // Add a slight scale effect during drop
-    active.node.style.opacity = "0";
-    
-    return () => {
-      active.node.style.opacity = "";
-    };
-  },
-  duration: 200,
-  easing: "cubic-bezier(0.25, 0.1, 0.25, 1)",
-};
-
-// Measuring configuration for consistent behavior during cross-container moves
-const measuringConfig = {
-  droppable: {
-    strategy: MeasuringStrategy.Always,
-  },
-};
-
 export function KanbanBoard({
   columns: initialColumns,
   onColumnsChange,
   onTaskMove,
+  onAddTask,
+  onTaskClick,
 }: KanbanBoardProps) {
   const [columns, setColumns] = useState<Column[]>(initialColumns);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -263,7 +247,6 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
-      measuring={measuringConfig}
     >
       <div
         ref={parentRef}
@@ -310,12 +293,16 @@ export function KanbanBoard({
                       column={column}
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
+                      onAddTask={onAddTask}
+                      onTaskClick={onTaskClick}
                     />
                   ) : (
                     <SimpleKanbanColumn
                       column={column}
                       tasks={column.tasks}
                       isOver={overId === `column-${column.id}`}
+                      onAddTask={onAddTask}
+                      onTaskClick={onTaskClick}
                     />
                   )}
                 </div>
@@ -325,10 +312,10 @@ export function KanbanBoard({
         </SortableContext>
       </div>
 
-      {/* Drag Overlay - renders the dragged item with consistent animation */}
+      {/* Drag Overlay - renders the dragged item */}
       {typeof document !== "undefined" &&
         createPortal(
-          <DragOverlay dropAnimation={dropAnimationConfig}>
+          <DragOverlay>
             {activeTask && <TaskCard task={activeTask} isOverlay />}
           </DragOverlay>,
           document.body
