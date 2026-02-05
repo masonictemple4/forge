@@ -28,6 +28,12 @@ const reorderSchema = z.object({
   afterId: z.string().uuid().nullable(),
 });
 
+const moveTaskSchema = z.object({
+  targetStatus: z.enum(taskStatuses),
+  beforeId: z.string().uuid().nullable(),
+  afterId: z.string().uuid().nullable(),
+});
+
 // GET /api/tasks - List all tasks
 tasksRouter.get("/", async (c) => {
   const status = c.req.query("status");
@@ -174,6 +180,61 @@ tasksRouter.post("/:id/reorder", zValidator("json", reorderSchema), async (c) =>
   }
   
   return c.json(task);
+});
+
+// POST /api/tasks/:id/move - Move task to different column/position
+tasksRouter.post("/:id/move", zValidator("json", moveTaskSchema), async (c) => {
+  const id = c.req.param("id");
+  const { targetStatus, beforeId, afterId } = c.req.valid("json");
+  
+  // Get the task to move
+  const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
+  if (!task) {
+    return c.json({ error: "Task not found" }, 404);
+  }
+  
+  // Calculate new rank based on surrounding tasks
+  let beforeRank: string | null = null;
+  let afterRank: string | null = null;
+  
+  if (beforeId) {
+    const [before] = await db.select({ rank: tasks.rank }).from(tasks).where(eq(tasks.id, beforeId));
+    beforeRank = before?.rank ?? null;
+  }
+  
+  if (afterId) {
+    const [after] = await db.select({ rank: tasks.rank }).from(tasks).where(eq(tasks.id, afterId));
+    afterRank = after?.rank ?? null;
+  }
+  
+  // If neither before nor after specified, add to end of target column
+  if (!beforeId && !afterId) {
+    const [lastTask] = await db
+      .select({ rank: tasks.rank })
+      .from(tasks)
+      .where(eq(tasks.status, targetStatus))
+      .orderBy(sql`${tasks.rank} DESC`)
+      .limit(1);
+    
+    if (lastTask) {
+      afterRank = lastTask.rank;
+    }
+  }
+  
+  const newRank = generateRankBetween(afterRank, beforeRank);
+  
+  // Update task with new status and rank
+  const [updated] = await db
+    .update(tasks)
+    .set({ 
+      status: targetStatus, 
+      rank: newRank, 
+      updatedAt: new Date() 
+    })
+    .where(eq(tasks.id, id))
+    .returning();
+  
+  return c.json(updated);
 });
 
 // DELETE /api/tasks/:id - Delete task
