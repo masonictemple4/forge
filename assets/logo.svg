@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 480" width="400" height="480">
+  <defs>
+    <!-- Gradient for golden accents -->
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#D4AF37"/>
+      <stop offset="50%" style="stop-color:#F4D03F"/>
+      <stop offset="100%" style="stop-color:#C9A227"/>
+    </linearGradient>
+    
+    <!-- Deep blue gradient -->
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1E3A5F"/>
+      <stop offset="100%" style="stop-color:#0D1F33"/>
+    </linearGradient>
+    
+    <!-- Radiant glow for all-seeing eye -->
+    <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#F4D03F;stop-opacity:0.8"/>
+      <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:0"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Background circle (optional, can be removed for transparency) -->
+  
+  <!-- THE COMPASS - pointing upward (progress/ascension) -->
+  <!-- Left leg of compass -->
+  <polygon 
+    points="200,40 170,260 185,265 200,75 215,265 230,260" 
+    fill="url(#blueGradient)"
+  />
+  
+  <!-- Compass legs spread outward -->
+  <polygon 
+    points="200,75 100,280 115,290 200,110" 
+    fill="url(#blueGradient)"
+  />
+  <polygon 
+    points="200,75 300,280 285,290 200,110" 
+    fill="url(#blueGradient)"
+  />
+  
+  <!-- THE SQUARE - L-shaped, sitting below compass -->
+  <g fill="url(#goldGradient)">
+    <!-- Horizontal bar of square -->
+    <rect x="90" y="220" width="220" height="20" rx="2"/>
+    <!-- Left vertical bar -->
+    <rect x="90" y="220" width="20" height="100" rx="2"/>
+    <!-- Right vertical bar -->
+    <rect x="290" y="220" width="20" height="100" rx="2"/>
+  </g>
+  
+  <!-- Central blazing star / all-seeing eye triangle -->
+  <g transform="translate(200, 175)">
+    <!-- Outer glow -->
+    <circle cx="0" cy="0" r="45" fill="url(#eyeGlow)"/>
+    
+    <!-- Triangle (pyramid/delta) -->
+    <polygon 
+      points="0,-35 30,20 -30,20" 
+      fill="none" 
+      stroke="url(#goldGradient)" 
+      stroke-width="3"
+    />
+    
+    <!-- The eye / F symbol -->
+    <circle cx="0" cy="0" r="12" fill="url(#goldGradient)"/>
+    <circle cx="0" cy="0" r="6" fill="url(#blueGradient)"/>
+    
+    <!-- Radiating lines (blazing star effect) -->
+    <g stroke="url(#goldGradient)" stroke-width="1.5" opacity="0.7">
+      <line x1="0" y1="-45" x2="0" y2="-55"/>
+      <line x1="32" y1="-23" x2="39" y2="-28"/>
+      <line x1="32" y1="23" x2="39" y2="28"/>
+      <line x1="0" y1="30" x2="0" y2="38"/>
+      <line x1="-32" y1="23" x2="-39" y2="28"/>
+      <line x1="-32" y1="-23" x2="-39" y2="-28"/>
+    </g>
+  </g>
+  
+  <!-- Speed lines / motion streaks (dynamic forward motion) -->
+  <g stroke="url(#goldGradient)" stroke-width="2" opacity="0.5">
+    <line x1="60" y1="150" x2="80" y2="150"/>
+    <line x1="50" y1="175" x2="75" y2="175"/>
+    <line x1="60" y1="200" x2="80" y2="200"/>
+    
+    <line x1="340" y1="150" x2="320" y2="150"/>
+    <line x1="350" y1="175" x2="325" y2="175"/>
+    <line x1="340" y1="200" x2="320" y2="200"/>
+  </g>
+  
+  <!-- Geometric precision marks -->
+  <g fill="url(#goldGradient)" opacity="0.6">
+    <circle cx="200" cy="40" r="4"/>
+    <circle cx="100" cy="280" r="3"/>
+    <circle cx="300" cy="280" r="3"/>
+  </g>
+  
+  <!-- FORGE text -->
+  <text 
+    x="200" 
+    y="400" 
+    text-anchor="middle" 
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" 
+    font-size="64" 
+    font-weight="600" 
+    letter-spacing="12"
+    fill="url(#blueGradient)"
+  >FORGE</text>
+  
+  <!-- Subtle underline accent -->
+  <rect x="100" y="415" width="200" height="3" rx="1.5" fill="url(#goldGradient)"/>
+  
+  <!-- Small tagline (optional) -->
+  <text 
+    x="200" 
+    y="450" 
+    text-anchor="middle" 
+    font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" 
+    font-size="14" 
+    font-weight="300" 
+    letter-spacing="4"
+    fill="#1E3A5F"
+    opacity="0.7"
+  >BUILD • SHIP • EXCEL</text>
+</svg>
