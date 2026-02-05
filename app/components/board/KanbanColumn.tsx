@@ -390,7 +390,7 @@ export function SimpleKanbanColumn({
         />
       </div>
 
-      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
+      <div ref={setNodeRef} className="flex-1 min-h-0 overflow-y-auto p-2">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
             <DraggableTaskCard key={task.id} task={task} onClick={onTaskClick} />
