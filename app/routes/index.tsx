@@ -12,7 +12,23 @@ function Home() {
         Wicked performant project management
       </p>
       
-      <div className="grid gap-6 md:grid-cols-2 max-w-4xl">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl">
+        {/* API Board - NEW */}
+        <Link
+          to="/board/api"
+          className="group block p-6 rounded-xl border-2 border-primary/50 bg-card hover:border-primary hover:shadow-lg transition-all"
+        >
+          <h2 className="text-xl font-semibold mb-2 group-hover:text-primary">
+            🚀 Live Board (API)
+          </h2>
+          <p className="text-sm text-muted-foreground mb-3">
+            Real database + Optimistic UI
+          </p>
+          <p className="text-xs text-muted-foreground">
+            TanStack Query • Instant updates • Auto-rollback
+          </p>
+        </Link>
+
         {/* Board Demo */}
         <Link
           to="/board"
