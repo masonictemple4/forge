@@ -15,7 +15,6 @@ import { KanbanBoard } from "./KanbanBoard";
 import { useToast } from "~/components/ui/toast";
 import {
   useBoard,
-  useMoveTask,
   useCreateTask,
   useUpdateTask,
   useDeleteTask,
@@ -65,7 +64,6 @@ function transformColumns(
 
 export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnectedProps) {
   const { data: board, isLoading, error } = useBoard(boardId);
-  const moveTaskMutation = useMoveTask();
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
@@ -80,50 +78,33 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
   // Transform data for board component
   const columns = useMemo(() => {
     if (!board?.columns) return [];
-    return transformColumns(board.columns);
+    const transformed = transformColumns(board.columns);
+    console.log("[KanbanBoardConnected] columns:", transformed.map(c => ({ id: c.id, taskCount: c.tasks.length, firstTaskId: c.tasks[0]?.id })));
+    return transformed;
   }, [board?.columns]);
 
-  // Handle task move with optimistic update
+  // Handle task move — PATCH the task directly with the new status and rank.
+  // The board already calculated the correct rank via lexorank, so we just persist it.
   const handleTaskMove = useCallback(
     (
       taskId: string,
-      sourceColumnId: string,
+      _sourceColumnId: string,
       targetColumnId: string,
       newRank: string
     ) => {
-      // Find adjacent tasks for the move request
-      const targetColumn = columns.find((c) => c.id === targetColumnId);
-      const tasksInTarget = targetColumn?.tasks.filter((t) => t.id !== taskId) ?? [];
-      const sortedTasks = [...tasksInTarget].sort((a, b) => a.rank.localeCompare(b.rank));
-      
-      // Find position based on newRank
-      let beforeTaskId: string | null = null;
-      let afterTaskId: string | null = null;
-      
-      for (let i = 0; i < sortedTasks.length; i++) {
-        if (sortedTasks[i].rank > newRank) {
-          beforeTaskId = String(sortedTasks[i].id);
-          if (i > 0) {
-            afterTaskId = String(sortedTasks[i - 1].id);
-          }
-          break;
-        }
-      }
-      
-      // If no beforeTask found, we're at the end
-      if (!beforeTaskId && sortedTasks.length > 0) {
-        afterTaskId = String(sortedTasks[sortedTasks.length - 1].id);
-      }
-
-      moveTaskMutation.mutate(
+      console.log("[handleTaskMove] called:", { taskId, targetColumnId, newRank });
+      updateTaskMutation.mutate(
         {
-          taskId,
-          targetStatus: targetColumnId as TaskStatus,
-          beforeTaskId,
-          afterTaskId,
+          id: taskId,
+          status: targetColumnId as TaskStatus,
+          rank: newRank,
         },
         {
+          onSuccess: (data) => {
+            console.log("[handleTaskMove] PATCH succeeded:", data);
+          },
           onError: (err) => {
+            console.error("[handleTaskMove] PATCH failed:", err);
             toast.error(
               "Failed to move task",
               err instanceof Error ? err.message : "Please try again"
@@ -132,7 +113,7 @@ export function KanbanBoardConnected({ boardId = "default" }: KanbanBoardConnect
         }
       );
     },
-    [columns, moveTaskMutation, toast]
+    [updateTaskMutation, toast]
   );
 
   // Handle column reorder (columns are status-based, so this is informational only)

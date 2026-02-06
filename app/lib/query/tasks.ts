@@ -49,13 +49,21 @@ async function createTask(input: CreateTaskInput): Promise<Task> {
 }
 
 async function updateTask(id: string, input: UpdateTaskInput): Promise<Task> {
+  console.log("[updateTask] PATCH", `${API_BASE}/tasks/${id}`, input);
   const res = await fetch(`${API_BASE}/tasks/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  if (!res.ok) throw new Error("Failed to update task");
-  return res.json();
+  console.log("[updateTask] response status:", res.status);
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("[updateTask] error body:", text);
+    throw new Error("Failed to update task");
+  }
+  const data = await res.json();
+  console.log("[updateTask] response data:", data);
+  return data;
 }
 
 async function deleteTask(id: string): Promise<{ deleted: boolean }> {

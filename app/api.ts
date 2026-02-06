@@ -41,12 +41,14 @@ honoApp.route("/api/auth", authRouter);
 export default createStartAPIHandler(async ({ request }) => {
   // Try to handle with Hono first
   const url = new URL(request.url);
-  
+
+  console.log(`[api.ts] ${request.method} ${url.pathname}`);
+
   // Check if this is a Hono route
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/")) {
     return honoApp.fetch(request);
   }
-  
+
   // Fall back to default file route handler
   return defaultAPIFileRouteHandler({ request });
 });

@@ -88,16 +88,25 @@ export function KanbanBoard({
   const columnIds = useMemo(() => columns.map((col) => `column-${col.id}`), [columns]);
 
   const calculateRankBetween = useCallback((afterRank: string | null, beforeRank: string | null): string => {
-    if (afterRank && beforeRank) {
-      return between(afterRank, beforeRank);
+    try {
+      if (afterRank && beforeRank) {
+        if (afterRank >= beforeRank) {
+          // Ranks are equal or inverted — can't compute midpoint, append after the lower one
+          return after(afterRank);
+        }
+        return between(afterRank, beforeRank);
+      }
+      if (afterRank) {
+        return after(afterRank);
+      }
+      if (beforeRank) {
+        return before(beforeRank);
+      }
+      return "V";
+    } catch {
+      // Fallback: if anything goes wrong with rank computation, generate a safe rank
+      return after(afterRank ?? beforeRank ?? "V");
     }
-    if (afterRank) {
-      return after(afterRank);
-    }
-    if (beforeRank) {
-      return before(beforeRank);
-    }
-    return "V";
   }, []);
 
   // Handle drag start
@@ -255,49 +264,58 @@ export function KanbanBoard({
       // Cross-column moves already happened in handleDragOver.
       // Here we finalize the position within the current column.
       if (activeData?.type === "task" && activeData.task) {
-        const taskId = activeData.task.id;
+        try {
+          const taskId = activeData.task.id;
+          console.log("[handleDragEnd] task drag:", { taskId, overIdStr, sourceColumnId });
 
-        // Find the column the task is currently in (using ref for latest state)
-        const currentColumn = cols.find(c => c.tasks.some(t => t.id === taskId));
-        if (!currentColumn) return;
+          // Find the column the task is currently in (using ref for latest state)
+          const currentColumn = cols.find(c => c.tasks.some(t => t.id === taskId));
+          if (!currentColumn) {
+            console.warn("[handleDragEnd] could not find column for task:", taskId);
+            return;
+          }
 
-        const activeIndex = currentColumn.tasks.findIndex(t => t.id === taskId);
-        if (activeIndex === -1) return;
+          const activeIndex = currentColumn.tasks.findIndex(t => t.id === taskId);
+          if (activeIndex === -1) return;
 
-        // Find where it was dropped
-        let overIndex = activeIndex;
-        if (overIdStr.startsWith("task-")) {
-          const overTaskId = overIdStr.replace("task-", "");
-          const idx = currentColumn.tasks.findIndex(t => t.id === overTaskId);
-          if (idx !== -1) overIndex = idx;
+          // Find where it was dropped
+          let overIndex = activeIndex;
+          if (overIdStr.startsWith("task-")) {
+            const overTaskId = overIdStr.replace("task-", "");
+            const idx = currentColumn.tasks.findIndex(t => t.id === overTaskId);
+            if (idx !== -1) overIndex = idx;
+          }
+
+          // Reorder if needed
+          const reorderedTasks = activeIndex !== overIndex
+            ? arrayMove(currentColumn.tasks, activeIndex, overIndex)
+            : currentColumn.tasks;
+
+          const finalIndex = reorderedTasks.findIndex(t => t.id === taskId);
+          const prevTask = finalIndex > 0 ? reorderedTasks[finalIndex - 1] : null;
+          const nextTask = finalIndex < reorderedTasks.length - 1
+            ? reorderedTasks[finalIndex + 1]
+            : null;
+          const newRank = calculateRankBetween(prevTask?.rank ?? null, nextTask?.rank ?? null);
+
+          const newCols = cols.map(col => {
+            if (col.id !== currentColumn.id) return col;
+            return {
+              ...col,
+              tasks: reorderedTasks.map(t =>
+                t.id === taskId ? { ...t, rank: newRank } : t
+              ),
+            };
+          });
+          columnsRef.current = newCols;
+          setColumns(newCols);
+
+          const origSourceId = sourceColumnId ?? currentColumn.id;
+          console.log("[handleDragEnd] calling onTaskMove:", { taskId, origSourceId, targetColumnId: currentColumn.id, newRank });
+          onTaskMove?.(taskId, origSourceId, currentColumn.id, newRank);
+        } catch (err) {
+          console.error("[handleDragEnd] ERROR in task drag handler:", err);
         }
-
-        // Reorder if needed
-        const reorderedTasks = activeIndex !== overIndex
-          ? arrayMove(currentColumn.tasks, activeIndex, overIndex)
-          : currentColumn.tasks;
-
-        const finalIndex = reorderedTasks.findIndex(t => t.id === taskId);
-        const prevTask = finalIndex > 0 ? reorderedTasks[finalIndex - 1] : null;
-        const nextTask = finalIndex < reorderedTasks.length - 1
-          ? reorderedTasks[finalIndex + 1]
-          : null;
-        const newRank = calculateRankBetween(prevTask?.rank ?? null, nextTask?.rank ?? null);
-
-        const newCols = cols.map(col => {
-          if (col.id !== currentColumn.id) return col;
-          return {
-            ...col,
-            tasks: reorderedTasks.map(t =>
-              t.id === taskId ? { ...t, rank: newRank } : t
-            ),
-          };
-        });
-        columnsRef.current = newCols;
-        setColumns(newCols);
-
-        const origSourceId = sourceColumnId ?? currentColumn.id;
-        onTaskMove?.(taskId, origSourceId, currentColumn.id, newRank);
       }
     },
     [
