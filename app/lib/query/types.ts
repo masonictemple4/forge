@@ -13,6 +13,8 @@ export interface Task {
   rank: string;
   path: string;
   status: TaskStatus;
+  blockedBy: string[];
+  blocks: string[];
   createdAt: string;
   updatedAt: string;
 }

@@ -450,3 +450,70 @@ describe('real-world scenarios', () => {
     }
   });
 });
+
+describe('DependencyGraph<string> (UUID support)', () => {
+  const a = 'aaaaaaaa-0000-0000-0000-000000000001';
+  const b = 'aaaaaaaa-0000-0000-0000-000000000002';
+  const c = 'aaaaaaaa-0000-0000-0000-000000000003';
+  const d = 'aaaaaaaa-0000-0000-0000-000000000004';
+
+  it('supports string IDs for add/get/remove', () => {
+    const dag = new DependencyGraph<string>();
+    dag.addDependency(a, b);
+    dag.addDependency(b, c);
+
+    expect(dag.hasDependency(a, b)).toBe(true);
+    expect(dag.getBlockers(b)).toEqual([a]);
+    expect(dag.getBlocked(a)).toEqual([b]);
+    expect(dag.size).toBe(2);
+
+    dag.removeDependency(a, b);
+    expect(dag.hasDependency(a, b)).toBe(false);
+  });
+
+  it('detects cycles with string IDs', () => {
+    const dag = new DependencyGraph<string>();
+    dag.addDependency(a, b);
+    dag.addDependency(b, c);
+    expect(() => dag.addDependency(c, a)).toThrow(/cycle/);
+  });
+
+  it('topological sort works with string IDs', () => {
+    const dag = new DependencyGraph<string>();
+    dag.addDependency(a, b);
+    dag.addDependency(b, c);
+    dag.addDependency(a, c);
+
+    const sorted = dag.topologicalSort();
+    expect(sorted.indexOf(a)).toBeLessThan(sorted.indexOf(b));
+    expect(sorted.indexOf(b)).toBeLessThan(sorted.indexOf(c));
+  });
+
+  it('getReadyTasks works with string IDs', () => {
+    const dag = new DependencyGraph<string>();
+    dag.addDependency(a, b);
+    dag.addDependency(a, c);
+    dag.addDependency(b, d);
+
+    expect(dag.getReadyTasks([])).toEqual([a]);
+    expect(dag.getReadyTasks([a])).toEqual(expect.arrayContaining([b, c]));
+    expect(dag.getReadyTasks([a, b])).toEqual(expect.arrayContaining([c, d]));
+  });
+
+  it('fromEdges works with string IDs', () => {
+    const edges: Array<[string, string]> = [[a, b], [b, c]];
+    const dag = DependencyGraph.fromEdges(edges);
+    expect(dag.size).toBe(2);
+    expect(dag.getBlockers(c)).toEqual([b]);
+    expect(dag.toEdges()).toEqual(expect.arrayContaining(edges));
+  });
+
+  it('hasCycle standalone works with string IDs', () => {
+    const graph: Graph<string> = new Map();
+    graph.set(a, new Set([b]));
+    graph.set(b, new Set([c]));
+
+    expect(hasCycle(graph, c, a)).toBe(true);
+    expect(hasCycle(graph, d, a)).toBe(false);
+  });
+});

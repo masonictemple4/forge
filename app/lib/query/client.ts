@@ -69,4 +69,8 @@ export const queryKeys = {
   // Column queries
   columns: () => [...queryKeys.all, "columns"] as const,
   column: (id: string) => [...queryKeys.columns(), id] as const,
+
+  // Dependency queries
+  dependencies: () => [...queryKeys.all, "dependencies"] as const,
+  taskDependencies: (taskId: string) => [...queryKeys.dependencies(), taskId] as const,
 } as const;

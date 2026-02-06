@@ -1,6 +1,5 @@
 import { useRef, useState, useCallback, useEffect, useLayoutEffect } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { useDroppable } from "@dnd-kit/core";
 import {
   useSortable,
   SortableContext,
@@ -40,7 +39,6 @@ function VirtualizedSortableItem({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
     isSorting,
   } = useSortable({
@@ -49,30 +47,26 @@ function VirtualizedSortableItem({
       type: "task",
       task,
     },
-    animateLayoutChanges: () => true,
+    // Disable dnd-kit layout animations — they conflict with virtualizer
+    // remounting items and cause tasks to fly in from wrong positions.
+    animateLayoutChanges: () => false,
   });
 
-  // Combine virtualizer's Y position with dnd-kit's transform
-  // During drag: dnd-kit controls position entirely
-  // Not dragging: virtualizer Y + any dnd-kit sorting offset
-  const yOffset = virtualStart + (transform?.y ?? 0);
-  const xOffset = transform?.x ?? 0;
-  const scaleX = transform?.scaleX ?? 1;
-  const scaleY = transform?.scaleY ?? 1;
-
-  const combinedTransform = `translate3d(${xOffset}px, ${yOffset}px, 0) scaleX(${scaleX}) scaleY(${scaleY})`;
-
-  const customTransition = isSorting || transition
-    ? "transform 170ms cubic-bezier(0.2, 0, 0, 1)"
+  // Position via `top` (virtualizer, instant) and `transform` (dnd-kit sort offset, animated).
+  // Keeping them separate prevents virtualStart changes from being animated.
+  const sortTransform = !isDragging && transform
+    ? `translate3d(${transform.x ?? 0}px, ${transform.y ?? 0}px, 0)`
     : undefined;
 
   const style: React.CSSProperties = {
     position: "absolute",
-    top: 0,
+    top: virtualStart,
     left: 0,
     width: "100%",
-    transform: combinedTransform,
-    transition: customTransition,
+    transform: sortTransform,
+    transition: isSorting && !isDragging && transform
+      ? "transform 150ms ease"
+      : undefined,
     boxSizing: "border-box",
     paddingBottom: CARD_GAP,
     opacity: isDragging ? 0 : 1,
@@ -298,15 +292,6 @@ export function KanbanColumn({
   const [scrollHeight, setScrollHeight] = useState(400); // fallback height
   const [isMounted, setIsMounted] = useState(false);
 
-  // Set up droppable zone for the column
-  const { setNodeRef, isOver: isDropOver } = useDroppable({
-    id: `column-${column.id}`,
-    data: {
-      type: "column",
-      column,
-    },
-  });
-
   // Mark as mounted after hydration
   useEffect(() => {
     setIsMounted(true);
@@ -354,7 +339,7 @@ export function KanbanColumn({
 
   const virtualItems = virtualizer.getVirtualItems();
   const taskIds = tasks.map((task) => `task-${task.id}`);
-  const isOverColumn = isOver || isDropOver;
+  const isOverColumn = isOver;
 
   return (
     <div
@@ -378,10 +363,7 @@ export function KanbanColumn({
 
       {/* Scrollable Task List with Virtualization */}
       <div
-        ref={(node) => {
-          setNodeRef(node);
-          (scrollRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-        }}
+        ref={scrollRef}
         style={{ height: scrollHeight }}
         className="overflow-y-auto p-2"
       >

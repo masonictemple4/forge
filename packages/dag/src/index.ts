@@ -8,7 +8,7 @@
 /**
  * Graph representation: adjacency list where key is blocker, values are tasks it blocks
  */
-export type Graph = Map<number, Set<number>>;
+export type Graph<T extends string | number = number> = Map<T, Set<T>>;
 
 /**
  * Check if adding an edge from `from` to `to` would create a cycle.
@@ -19,14 +19,14 @@ export type Graph = Map<number, Set<number>>;
  * @param to - The blocked task ID (destination of new edge)
  * @returns true if adding this edge would create a cycle
  */
-export function hasCycle(graph: Graph, from: number, to: number): boolean {
+export function hasCycle<T extends string | number>(graph: Graph<T>, from: T, to: T): boolean {
   // If from === to, it's a self-loop (cycle)
   if (from === to) return true;
 
   // Check if we can reach `from` starting from `to`
   // If yes, adding edge from->to creates a cycle
-  const visited = new Set<number>();
-  const stack = [to];
+  const visited = new Set<T>();
+  const stack: T[] = [to];
 
   while (stack.length > 0) {
     const current = stack.pop()!;
@@ -59,18 +59,20 @@ export function hasCycle(graph: Graph, from: number, to: number): boolean {
  *
  * Manages task dependencies with O(1) lookups for blockers and blocked tasks.
  * Ensures the graph remains acyclic.
+ *
+ * @typeParam T - The type of task IDs (number or string). Defaults to number.
  */
-export class DependencyGraph {
+export class DependencyGraph<T extends string | number = number> {
   // blocker -> Set of tasks it blocks
-  private blocksMap: Graph = new Map();
+  private blocksMap: Graph<T> = new Map();
 
   // blocked -> Set of tasks blocking it
-  private blockedByMap: Graph = new Map();
+  private blockedByMap: Graph<T> = new Map();
 
   /**
    * Create a new DependencyGraph, optionally from existing edges
    */
-  constructor(edges?: Array<[number, number]>) {
+  constructor(edges?: Array<[T, T]>) {
     if (edges) {
       for (const [blocker, blocked] of edges) {
         this.addDependency(blocker, blocked);
@@ -81,7 +83,7 @@ export class DependencyGraph {
   /**
    * Get the internal graph representation (blocker -> blocked)
    */
-  get graph(): Graph {
+  get graph(): Graph<T> {
     return this.blocksMap;
   }
 
@@ -92,7 +94,7 @@ export class DependencyGraph {
    * @param blockedId - The task that is blocked
    * @throws Error if adding this dependency would create a cycle
    */
-  addDependency(blockerId: number, blockedId: number): void {
+  addDependency(blockerId: T, blockedId: T): void {
     // Check for cycle before adding
     if (hasCycle(this.blocksMap, blockerId, blockedId)) {
       throw new Error(
@@ -120,7 +122,7 @@ export class DependencyGraph {
    * @param blockedId - The task that was blocked
    * @returns true if the dependency existed and was removed
    */
-  removeDependency(blockerId: number, blockedId: number): boolean {
+  removeDependency(blockerId: T, blockedId: T): boolean {
     const blocks = this.blocksMap.get(blockerId);
     const blockedBy = this.blockedByMap.get(blockedId);
 
@@ -148,7 +150,7 @@ export class DependencyGraph {
    * @param taskId - The task to check
    * @returns Array of task IDs that block this task
    */
-  getBlockers(taskId: number): number[] {
+  getBlockers(taskId: T): T[] {
     const blockers = this.blockedByMap.get(taskId);
     return blockers ? Array.from(blockers) : [];
   }
@@ -159,7 +161,7 @@ export class DependencyGraph {
    * @param taskId - The task to check
    * @returns Array of task IDs that this task blocks
    */
-  getBlocked(taskId: number): number[] {
+  getBlocked(taskId: T): T[] {
     const blocked = this.blocksMap.get(taskId);
     return blocked ? Array.from(blocked) : [];
   }
@@ -171,15 +173,15 @@ export class DependencyGraph {
    * @param blockedId - The potentially blocked task
    * @returns true if blockerId blocks blockedId
    */
-  hasDependency(blockerId: number, blockedId: number): boolean {
+  hasDependency(blockerId: T, blockedId: T): boolean {
     return this.blocksMap.get(blockerId)?.has(blockedId) ?? false;
   }
 
   /**
    * Get all task IDs in the graph.
    */
-  getAllTasks(): number[] {
-    const tasks = new Set<number>();
+  getAllTasks(): T[] {
+    const tasks = new Set<T>();
     for (const [blocker, blocked] of this.blocksMap) {
       tasks.add(blocker);
       for (const b of blocked) {
@@ -197,7 +199,7 @@ export class DependencyGraph {
    * @returns Sorted array of task IDs
    * @throws Error if the subgraph contains a cycle (shouldn't happen if using addDependency)
    */
-  topologicalSort(taskIds?: number[]): number[] {
+  topologicalSort(taskIds?: T[]): T[] {
     const tasks = new Set(taskIds ?? this.getAllTasks());
 
     if (tasks.size === 0) {
@@ -205,8 +207,8 @@ export class DependencyGraph {
     }
 
     // Build in-degree map for the subgraph
-    const inDegree = new Map<number, number>();
-    const subgraphEdges = new Map<number, Set<number>>();
+    const inDegree = new Map<T, number>();
+    const subgraphEdges = new Map<T, Set<T>>();
 
     // Initialize
     for (const task of tasks) {
@@ -228,8 +230,8 @@ export class DependencyGraph {
     }
 
     // Kahn's algorithm
-    const queue: number[] = [];
-    const result: number[] = [];
+    const queue: T[] = [];
+    const result: T[] = [];
 
     // Start with tasks that have no blockers in the subgraph
     for (const [task, degree] of inDegree) {
@@ -239,7 +241,7 @@ export class DependencyGraph {
     }
 
     // Sort queue for deterministic output
-    queue.sort((a, b) => a - b);
+    queue.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 
     while (queue.length > 0) {
       const current = queue.shift()!;
@@ -247,7 +249,7 @@ export class DependencyGraph {
 
       const blocked = subgraphEdges.get(current);
       if (blocked) {
-        const nextTasks: number[] = [];
+        const nextTasks: T[] = [];
         for (const b of blocked) {
           const newDegree = (inDegree.get(b) ?? 0) - 1;
           inDegree.set(b, newDegree);
@@ -256,7 +258,7 @@ export class DependencyGraph {
           }
         }
         // Sort for deterministic output
-        nextTasks.sort((a, b) => a - b);
+        nextTasks.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
         queue.push(...nextTasks);
       }
     }
@@ -275,14 +277,11 @@ export class DependencyGraph {
    * @param completedIds - Array of task IDs that are already completed
    * @returns Array of task IDs that have all their blockers completed
    */
-  getReadyTasks(completedIds: number[]): number[] {
+  getReadyTasks(completedIds: T[]): T[] {
     const completed = new Set(completedIds);
-    const ready: number[] = [];
+    const ready: T[] = [];
 
     // Get all tasks that have blockers
-    const tasksWithBlockers = new Set(this.blockedByMap.keys());
-
-    // Also get all tasks that block others but might not have blockers themselves
     const allTasks = this.getAllTasks();
 
     for (const taskId of allTasks) {
@@ -312,7 +311,7 @@ export class DependencyGraph {
       }
     }
 
-    return ready.sort((a, b) => a - b);
+    return ready.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   }
 
   /**
@@ -322,7 +321,7 @@ export class DependencyGraph {
    * @param currentlyCompleted - Tasks already completed
    * @returns Array of task IDs that would become ready
    */
-  getUnblockedBy(taskId: number, currentlyCompleted: number[] = []): number[] {
+  getUnblockedBy(taskId: T, currentlyCompleted: T[] = []): T[] {
     const completed = new Set(currentlyCompleted);
     const blocked = this.blocksMap.get(taskId);
 
@@ -330,7 +329,7 @@ export class DependencyGraph {
       return [];
     }
 
-    const willBeReady: number[] = [];
+    const willBeReady: T[] = [];
 
     for (const blockedTask of blocked) {
       if (completed.has(blockedTask)) {
@@ -356,7 +355,7 @@ export class DependencyGraph {
       }
     }
 
-    return willBeReady.sort((a, b) => a - b);
+    return willBeReady.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
   }
 
   /**
@@ -381,8 +380,8 @@ export class DependencyGraph {
   /**
    * Export the graph as an array of edges.
    */
-  toEdges(): Array<[number, number]> {
-    const edges: Array<[number, number]> = [];
+  toEdges(): Array<[T, T]> {
+    const edges: Array<[T, T]> = [];
     for (const [blocker, blocked] of this.blocksMap) {
       for (const b of blocked) {
         edges.push([blocker, b]);
@@ -394,12 +393,12 @@ export class DependencyGraph {
   /**
    * Create a DependencyGraph from an array of edges.
    */
-  static fromEdges(edges: Array<[number, number]>): DependencyGraph {
-    return new DependencyGraph(edges);
+  static fromEdges<T extends string | number = number>(edges: Array<[T, T]>): DependencyGraph<T> {
+    return new DependencyGraph<T>(edges);
   }
 }
 
 // Export standalone functions that work with the class
-export function createGraph(): DependencyGraph {
-  return new DependencyGraph();
+export function createGraph<T extends string | number = number>(): DependencyGraph<T> {
+  return new DependencyGraph<T>();
 }

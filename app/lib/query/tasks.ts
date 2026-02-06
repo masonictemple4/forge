@@ -130,6 +130,8 @@ export function useCreateTask() {
         status: newTask.status ?? "backlog",
         rank: "zzz", // Will be at end
         path: "/",
+        blockedBy: [],
+        blocks: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };

@@ -40,12 +40,11 @@ function apiTaskToBoardTask(task: ApiTask): Task {
     description: task.description ?? undefined,
     columnId: task.status,
     rank: task.rank,
-    // These would come from additional API data
     labels: undefined,
     assignee: undefined,
     priority: undefined,
-    blockedBy: undefined,
-    blocks: undefined,
+    blockedBy: task.blockedBy.length > 0 ? task.blockedBy : undefined,
+    blocks: task.blocks.length > 0 ? task.blocks : undefined,
   };
 }
 

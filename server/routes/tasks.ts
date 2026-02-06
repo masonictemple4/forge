@@ -1,11 +1,35 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
-import { db, tasks, taskStatuses } from "@db/index";
+import { db, tasks, taskStatuses, dependencies } from "@db/index";
 import { eq, sql, like, and, asc } from "drizzle-orm";
 import { generateRank, generateRankBetween } from "../lib/lexorank";
 
 const tasksRouter = new Hono();
+
+/**
+ * Build blockedBy/blocks lookup maps from all dependency edges.
+ * Returns a function that enriches a task with its dependency arrays.
+ */
+async function buildDependencyMaps() {
+  const allDeps = await db.select().from(dependencies);
+  const blockedByMap = new Map<string, string[]>();
+  const blocksMap = new Map<string, string[]>();
+
+  for (const dep of allDeps) {
+    if (!blocksMap.has(dep.blockerId)) blocksMap.set(dep.blockerId, []);
+    blocksMap.get(dep.blockerId)!.push(dep.blockedId);
+
+    if (!blockedByMap.has(dep.blockedId)) blockedByMap.set(dep.blockedId, []);
+    blockedByMap.get(dep.blockedId)!.push(dep.blockerId);
+  }
+
+  return <T extends { id: string }>(task: T) => ({
+    ...task,
+    blockedBy: blockedByMap.get(task.id) ?? [],
+    blocks: blocksMap.get(task.id) ?? [],
+  });
+}
 
 // Validation schemas
 const createTaskSchema = z.object({
@@ -66,20 +90,22 @@ tasksRouter.get("/", async (c) => {
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .orderBy(asc(tasks.rank));
 
-  return c.json(result);
+  const enrichTask = await buildDependencyMaps();
+  return c.json(result.map(enrichTask));
 });
 
 // GET /api/tasks/:id - Get single task
 tasksRouter.get("/:id", async (c) => {
   const id = c.req.param("id");
-  
+
   const [task] = await db.select().from(tasks).where(eq(tasks.id, id));
-  
+
   if (!task) {
     return c.json({ error: "Task not found" }, 404);
   }
-  
-  return c.json(task);
+
+  const enrichTask = await buildDependencyMaps();
+  return c.json(enrichTask(task));
 });
 
 // POST /api/tasks - Create task

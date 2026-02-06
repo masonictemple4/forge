@@ -26,6 +26,14 @@ export {
   canMoveToStatus,
 } from "./boards";
 
+// Dependency queries and mutations
+export {
+  useAddDependency,
+  useRemoveDependency,
+  useDependencyGraph,
+  type DependencyInput,
+} from "./dependencies";
+
 // Column queries and mutations
 export {
   useColumns,
